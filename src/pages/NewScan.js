@@ -1,15 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Scan, AlertCircle, Globe, Shield, Lock } from 'lucide-react';
+import { Scan, AlertCircle, Globe, Shield, Lock, Zap, Crown } from 'lucide-react';
 import { scanApi } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import api from '../services/api';
 
 const NewScan = () => {
     const navigate = useNavigate();
     const [url, setUrl] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [usage, setUsage] = useState(null);
     const { isAuthenticated } = useAuth();
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            fetchUsage();
+        }
+    }, [isAuthenticated]);
+
+    const fetchUsage = async () => {
+        try {
+            const res = await api.get('/subscriptions/usage');
+            setUsage(res.data);
+        } catch (err) {
+            console.error('Error fetching usage:', err);
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -24,7 +41,6 @@ const NewScan = () => {
             return;
         }
 
-        // Basic URL validation
         let targetUrl = url.trim();
         if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
             targetUrl = 'https://' + targetUrl;
@@ -40,7 +56,11 @@ const NewScan = () => {
                 navigate(`/scan/${response.data.scanId}`);
             }
         } catch (err) {
-            setError(err.response?.data?.error || 'Failed to start scan');
+            if (err.response?.status === 403 && err.response?.data?.error?.includes('limit')) {
+                setError('You\'ve reached your monthly scan limit. Upgrade for more scans.');
+            } else {
+                setError(err.response?.data?.error || 'Failed to start scan');
+            }
             setLoading(false);
         }
     };
@@ -155,6 +175,49 @@ const NewScan = () => {
                                 </div>
                                 <Link to="/login" className="btn btn-primary" style={{ flexShrink: 0 }}>
                                     Sign In
+                                </Link>
+                            </div>
+                        )}
+
+                        {/* Usage Info */}
+                        {isAuthenticated && usage && (
+                            <div style={{
+                                padding: '16px',
+                                background: usage.percentageUsed > 80 ? 'rgba(239, 68, 68, 0.1)' : 'rgba(59, 130, 246, 0.1)',
+                                border: `1px solid ${usage.percentageUsed > 80 ? 'rgba(239, 68, 68, 0.3)' : 'rgba(59, 130, 246, 0.3)'}`,
+                                borderRadius: '8px',
+                                marginBottom: '24px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                gap: '16px'
+                            }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    {usage.tier === 'Free' ? <Zap size={24} style={{ color: usage.percentageUsed > 80 ? '#fca5a5' : '#93c5fd' }} /> : <Crown size={24} style={{ color: '#fbbf24' }} />}
+                                    <div>
+                                        <p style={{ margin: 0, fontWeight: 500 }}>
+                                            {usage.tier} Plan - {usage.isUnlimited ? 'Unlimited scans' : `${usage.scansUsed} of ${usage.scanLimit} scans used`}
+                                        </p>
+                                        {!usage.isUnlimited && (
+                                            <div style={{ marginTop: '8px', width: '200px' }}>
+                                                <div style={{ background: '#e5e7eb', borderRadius: '4px', height: '8px' }}>
+                                                    <div style={{
+                                                        width: `${usage.percentageUsed}%`,
+                                                        background: usage.percentageUsed > 80 ? '#ef4444' : '#3b82f6',
+                                                        height: '100%',
+                                                        borderRadius: '4px'
+                                                    }} />
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                <Link
+                                    to="/pricing"
+                                    className="btn btn-primary"
+                                    style={{ flexShrink: 0, background: usage.percentageUsed > 80 ? '#ef4444' : 'var(--primary-color)' }}
+                                >
+                                    {usage.tier === 'Free' ? 'Upgrade Now' : 'Manage Plan'}
                                 </Link>
                             </div>
                         )}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Lock, User, AlertCircle, Terminal, Shield } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -12,7 +12,6 @@ const Login = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    // Get the page they tried to visit
     const from = location.state?.from?.pathname || '/';
 
     const handleSubmit = async (e) => {
@@ -21,10 +20,9 @@ const Login = () => {
         setIsLoading(true);
 
         try {
-            const result = login(username, password);
+            const result = await login(username, password);
 
             if (result.success) {
-                // Redirect to the page they were trying to access
                 navigate(from, { replace: true });
             } else {
                 setError(result.error || 'Login failed');
@@ -169,7 +167,12 @@ const Login = () => {
                     fontSize: '14px',
                     color: 'var(--text-secondary)'
                 }}>
-                    <p>Demo credentials: any username/password</p>
+                    <p>
+                        Don't have an account?{' '}
+                        <Link to="/register" style={{ color: 'var(--primary-color)', fontWeight: 500 }}>
+                            Sign Up
+                        </Link>
+                    </p>
                 </div>
             </div>
         </div>

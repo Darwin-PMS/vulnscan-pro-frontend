@@ -9,6 +9,36 @@ const api = axios.create({
     }
 });
 
+api.interceptors.request.use((config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+});
+
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401 || error.response?.status === 403) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
+                window.location.href = '/login';
+            }
+        }
+        return Promise.reject(error);
+    }
+);
+
+// Auth API
+export const authApi = {
+    register: (userData) => api.post('/auth/register', userData),
+    login: (credentials) => api.post('/auth/login', credentials),
+    logout: () => api.post('/auth/logout'),
+    getCurrentUser: () => api.get('/auth/me')
+};
+
 // Scan API
 export const scanApi = {
     startScan: (url) => api.post('/scans/start', { url }),
@@ -36,6 +66,17 @@ export const aiApi = {
     suggestRemediation: (vulnerabilityType, severity) => api.post('/ai/remediation', { vulnerabilityType, severity }),
     explainCVE: (cveId) => api.get(`/ai/cve/${cveId}`),
     getSecurityTips: () => api.get('/ai/tips')
+};
+
+// Mobile App Security API
+export const mobileApi = {
+    scanAPK: (content, platform, appName) => api.post('/mobile/scan', { content, platform, app_name: appName }),
+    analyzeManifest: (content, platform) => api.post('/mobile/analyze/manifest', { content, platform }),
+    analyzeCode: (content, platform) => api.post('/mobile/analyze/code', { content, platform }),
+    analyzeNetwork: (content, platform) => api.post('/mobile/analyze/network', { content, platform }),
+    getPatterns: (platform) => api.get(`/mobile/patterns/${platform}`),
+    getTools: (platform) => api.get(`/mobile/tools/${platform}`),
+    getSecurityGuide: (platform) => api.get(`/mobile/guide/${platform}`)
 };
 
 export default api;

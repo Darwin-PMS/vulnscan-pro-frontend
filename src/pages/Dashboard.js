@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Scan, Bug, Shield, Activity } from 'lucide-react';
+import { Scan, Bug, Shield, Activity, Zap, Crown } from 'lucide-react';
 import { scanApi } from '../services/api';
+import { UsageProgress } from '../components/SubscriptionComponents';
 import StatCard from '../components/StatCard';
 import StatusBadge from '../components/StatusBadge';
 import { formatDistanceToNow } from 'date-fns';
@@ -11,6 +12,7 @@ const Dashboard = () => {
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [tier, setTier] = useState('free');
 
     useEffect(() => {
         fetchStats();
@@ -58,11 +60,40 @@ const Dashboard = () => {
     return (
         <div>
             <div className="container page-header">
-                <h1>Dashboard</h1>
-                <p>Overview of your vulnerability scanning activities</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                        <h1>Dashboard</h1>
+                        <p>Overview of your vulnerability scanning activities</p>
+                    </div>
+                    {tier === 'free' && (
+                        <div style={{
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            color: 'white',
+                            padding: '12px 20px',
+                            borderRadius: '12px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px',
+                            cursor: 'pointer'
+                        }} onClick={() => navigate('/pricing')}>
+                            <Zap size={24} />
+                            <div>
+                                <div style={{ fontWeight: 'bold', fontSize: '14px' }}>
+                                    Upgrade for More
+                                </div>
+                                <div style={{ fontSize: '12px', opacity: 0.9 }}>
+                                    Unlock unlimited scans
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
 
             <div className="container">
+                {/* Subscription Usage */}
+                <UsageProgress />
+
                 {/* Overview Stats */}
                 <div className="grid grid-4" style={{ marginBottom: '32px' }}>
                     <div className="card stat-card">

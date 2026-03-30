@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Shield, LayoutDashboard, ScanLine, List, Database, Smartphone, BookOpen, Terminal, LogOut, User, Bot } from 'lucide-react';
+import { Shield, LayoutDashboard, ScanLine, List, Database, Smartphone, BookOpen, Terminal, LogOut, User, Bot, Crown, DollarSign } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { SubscriptionBadge } from './SubscriptionComponents';
 
 const Navbar = () => {
     const location = useLocation();
@@ -59,6 +60,38 @@ const Navbar = () => {
                         paddingLeft: '16px',
                         borderLeft: '1px solid var(--border-color)'
                     }}>
+                        {/* Pricing Link */}
+                        <Link
+                            to="/pricing"
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                padding: '6px 10px',
+                                background: 'transparent',
+                                border: '1px solid var(--primary-color)',
+                                borderRadius: '6px',
+                                color: 'var(--primary-color)',
+                                textDecoration: 'none',
+                                fontSize: '12px',
+                                fontWeight: 500,
+                                transition: 'all 0.2s'
+                            }}
+                            onMouseEnter={(e) => {
+                                e.target.style.background = 'var(--primary-color)';
+                                e.target.style.color = 'white';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.target.style.background = 'transparent';
+                                e.target.style.color = 'var(--primary-color)';
+                            }}
+                        >
+                            <DollarSign size={14} />
+                            Pricing
+                        </Link>
+
+                        {isAuthenticated && <SubscriptionBadge />}
+
                         {isAuthenticated ? (
                             <>
                                 <div style={{
@@ -102,26 +135,45 @@ const Navbar = () => {
                                 </button>
                             </>
                         ) : (
-                            <Link
-                                to="/login"
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '6px',
-                                    padding: '8px 16px',
-                                    background: 'var(--primary-color)',
-                                    border: 'none',
-                                    borderRadius: '6px',
-                                    color: 'white',
-                                    textDecoration: 'none',
-                                    fontSize: '13px',
-                                    fontWeight: 500,
-                                    transition: 'all 0.2s'
-                                }}
-                            >
-                                <User size={14} />
-                                Sign In
-                            </Link>
+                            <>
+                                <Link
+                                    to="/login"
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        padding: '8px 12px',
+                                        background: 'transparent',
+                                        border: '1px solid var(--border-color)',
+                                        borderRadius: '6px',
+                                        color: 'var(--text-secondary)',
+                                        textDecoration: 'none',
+                                        fontSize: '13px',
+                                        transition: 'all 0.2s'
+                                    }}
+                                >
+                                    Sign In
+                                </Link>
+                                <Link
+                                    to="/register"
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        padding: '8px 16px',
+                                        background: 'var(--primary-color)',
+                                        border: 'none',
+                                        borderRadius: '6px',
+                                        color: 'white',
+                                        textDecoration: 'none',
+                                        fontSize: '13px',
+                                        fontWeight: 500,
+                                        transition: 'all 0.2s'
+                                    }}
+                                >
+                                    Sign Up
+                                </Link>
+                            </>
                         )}
                     </div>
                 </div>
