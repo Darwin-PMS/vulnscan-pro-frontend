@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
-import { Crown, Zap, AlertCircle } from 'lucide-react';
+import { Crown, Zap, AlertCircle, Calendar, CreditCard, Activity } from 'lucide-react';
 
 const SubscriptionBadge = () => {
     const { user } = useAuth();
@@ -32,38 +32,198 @@ const SubscriptionBadge = () => {
     if (!user) return null;
     if (loading) return null;
 
-    const tierColors = {
-        free: 'bg-gray-100 text-gray-700',
-        starter: 'bg-blue-100 text-blue-700',
-        professional: 'bg-purple-100 text-purple-700',
-        enterprise: 'bg-yellow-100 text-yellow-700'
-    };
-
-    const tierIcons = {
-        free: null,
-        starter: null,
-        professional: <Zap className="h-3 w-3" />,
-        enterprise: <Crown className="h-3 w-3" />
-    };
-
     const tier = usage?.tier?.toLowerCase() || 'free';
+    
+    const tierStyles = {
+        free: {
+            bg: 'rgba(107, 114, 128, 0.2)',
+            color: '#9ca3af',
+            border: 'rgba(107, 114, 128, 0.3)'
+        },
+        starter: {
+            bg: 'rgba(59, 130, 246, 0.2)',
+            color: '#60a5fa',
+            border: 'rgba(59, 130, 246, 0.3)'
+        },
+        professional: {
+            bg: 'rgba(139, 92, 246, 0.2)',
+            color: '#a78bfa',
+            border: 'rgba(139, 92, 246, 0.3)'
+        },
+        enterprise: {
+            bg: 'rgba(245, 158, 11, 0.2)',
+            color: '#fbbf24',
+            border: 'rgba(245, 158, 11, 0.3)'
+        }
+    };
+
+    const style = tierStyles[tier] || tierStyles.free;
 
     return (
         <button
             onClick={() => navigate('/pricing')}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition hover:opacity-80 ${tierColors[tier]}`}
+            className="nav-subscription-badge"
+            style={{
+                background: style.bg,
+                color: style.color,
+                border: `1px solid ${style.border}`
+            }}
         >
-            {tierIcons[tier]}
+            {tier === 'professional' && <Zap size={12} />}
+            {tier === 'enterprise' && <Crown size={12} />}
             <span>{usage?.tier || 'Free'}</span>
             {usage && !usage.isUnlimited && (
-                <span className="text-gray-500">
-                    ({usage.scansUsed}/{usage.scanLimit})
+                <span style={{ opacity: 0.7 }}>
+                    {usage.scansUsed}/{usage.scanLimit}
                 </span>
             )}
             {usage?.percentageUsed > 80 && (
-                <AlertCircle className="h-3 w-3 text-orange-500" />
+                <AlertCircle size={12} style={{ color: '#fbbf24' }} />
             )}
         </button>
+    );
+};
+
+const UsageSummary = () => {
+    const { user } = useAuth();
+    const [usage, setUsage] = useState(null);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        if (user) {
+            api.get('/subscriptions/usage')
+                .then(res => setUsage(res.data))
+                .catch(console.error);
+        }
+    }, [user]);
+
+    if (!user || !usage) return null;
+
+    const percentage = usage.percentageUsed || 0;
+    const isWarning = percentage > 80;
+    const isCritical = percentage > 95;
+
+    const getStatusColor = () => {
+        if (isCritical) return 'var(--danger-color)';
+        if (isWarning) return 'var(--warning-color)';
+        return 'var(--secondary-color)';
+    };
+
+    const getStatusBg = () => {
+        if (isCritical) return 'var(--critical-bg)';
+        if (isWarning) return 'var(--medium-bg)';
+        return 'var(--secondary-color)';
+    };
+
+    if (usage.isUnlimited) {
+        return (
+            <div className="card" style={{ marginBottom: '24px', padding: '20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <div style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '12px',
+                        background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                    }}>
+                        <Crown size={24} color="white" />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                            <span style={{ fontWeight: '600', fontSize: '16px' }}>{usage.tier}</span>
+                            <span style={{ 
+                                fontSize: '12px', 
+                                padding: '2px 8px', 
+                                borderRadius: '4px',
+                                background: 'rgba(16, 185, 129, 0.2)',
+                                color: '#34d399'
+                            }}>
+                                Unlimited
+                            </span>
+                        </div>
+                        <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-secondary)' }}>
+                            You have unlimited scans available
+                        </p>
+                    </div>
+                    <button 
+                        className="btn btn-secondary"
+                        onClick={() => navigate('/pricing')}
+                    >
+                        Manage Plan
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="card" style={{ marginBottom: '24px', padding: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <Activity size={20} style={{ color: 'var(--primary-color)' }} />
+                    <span style={{ fontWeight: '600', fontSize: '15px' }}>Usage Summary</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Calendar size={14} style={{ color: 'var(--text-muted)' }} />
+                    <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                        {usage.billingCycle === 'yearly' ? 'Yearly' : 'Monthly'}
+                    </span>
+                </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '24px', marginBottom: '16px' }}>
+                <div>
+                    <div style={{ fontSize: '24px', fontWeight: '700' }}>{usage.scansUsed}</div>
+                    <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Scans Used</div>
+                </div>
+                <div>
+                    <div style={{ fontSize: '24px', fontWeight: '700', color: 'var(--text-secondary)' }}>{usage.scanLimit}</div>
+                    <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Total Limit</div>
+                </div>
+                <div>
+                    <div style={{ fontSize: '24px', fontWeight: '700', color: getStatusColor() }}>
+                        {usage.scanLimit - usage.scansUsed}
+                    </div>
+                    <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Remaining</div>
+                </div>
+            </div>
+
+            <div style={{ marginBottom: '12px' }}>
+                <div style={{ 
+                    height: '8px', 
+                    background: 'var(--border-color)', 
+                    borderRadius: '4px',
+                    overflow: 'hidden'
+                }}>
+                    <div style={{
+                        width: `${Math.min(percentage, 100)}%`,
+                        height: '100%',
+                        background: `linear-gradient(90deg, ${getStatusColor()}, ${isWarning ? '#f59e0b' : '#6366f1'})`,
+                        borderRadius: '4px',
+                        transition: 'width 0.3s ease'
+                    }} />
+                </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ 
+                    fontSize: '13px', 
+                    color: isCritical ? 'var(--danger-color)' : isWarning ? 'var(--warning-color)' : 'var(--text-secondary)'
+                }}>
+                    {isCritical ? 'Limit reached - Upgrade now!' : 
+                     isWarning ? `Only ${usage.scanLimit - usage.scansUsed} scans remaining` : 
+                     `${percentage}% used this month`}
+                </div>
+                <button 
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => navigate('/pricing')}
+                >
+                    Upgrade Now
+                </button>
+            </div>
+        </div>
     );
 };
 
@@ -180,4 +340,4 @@ const SubscriptionRequired = ({ feature, tier }) => {
     );
 };
 
-export { SubscriptionBadge, UsageProgress, FeatureGate, SubscriptionRequired };
+export { SubscriptionBadge, UsageProgress, UsageSummary, FeatureGate, SubscriptionRequired };

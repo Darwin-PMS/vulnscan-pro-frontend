@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, RefreshCw, Trash2, AlertTriangle, Clock } from 'lucide-react';
+import { ArrowLeft, RefreshCw, Trash2, AlertTriangle, Clock, FileDown } from 'lucide-react';
 import { scanApi } from '../services/api';
 import VulnerabilityCard from '../components/VulnerabilityCard';
 import VulnerabilityDetailModal from '../components/VulnerabilityDetailModal';
 import StatusBadge from '../components/StatusBadge';
 import StatCard from '../components/StatCard';
 import { formatDistanceToNow } from 'date-fns';
+import { exportScanToPDFWithWatermark, exportScanToPDFWithoutWatermark } from '../utils/exportPdf';
 
 const ScanResults = () => {
     const { scanId } = useParams();
@@ -76,6 +77,22 @@ const ScanResults = () => {
             navigate('/scans');
         } catch (err) {
             setError('Failed to delete scan');
+        }
+    };
+
+    const handleExportPDFWithWatermark = () => {
+        if (scan && vulnerabilities.length > 0) {
+            exportScanToPDFWithWatermark(scan, vulnerabilities);
+        } else {
+            alert('No vulnerabilities to export');
+        }
+    };
+
+    const handleExportPDFWithoutWatermark = () => {
+        if (scan && vulnerabilities.length > 0) {
+            exportScanToPDFWithoutWatermark(scan, vulnerabilities);
+        } else {
+            alert('No vulnerabilities to export');
         }
     };
 
@@ -158,6 +175,28 @@ const ScanResults = () => {
                         </div>
 
                         <div style={{ display: 'flex', gap: '8px' }}>
+                            {vulnerabilities.length > 0 && (
+                                <>
+                                    <button 
+                                        className="btn btn-primary" 
+                                        onClick={handleExportPDFWithWatermark}
+                                        style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+                                        title="Export with branding and watermark"
+                                    >
+                                        <FileDown size={18} />
+                                        Export PDF (Branded)
+                                    </button>
+                                    <button 
+                                        className="btn btn-secondary" 
+                                        onClick={handleExportPDFWithoutWatermark}
+                                        style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+                                        title="Export without watermark"
+                                    >
+                                        <FileDown size={18} />
+                                        Export PDF (Clean)
+                                    </button>
+                                </>
+                            )}
                             <button className="btn btn-secondary" onClick={fetchScanResults}>
                                 <RefreshCw size={18} />
                                 Refresh

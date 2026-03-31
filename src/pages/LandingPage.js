@@ -8,25 +8,53 @@ import {
     BarChart3, Target, Bug, FileSearch, Terminal as TerminalIcon,
     Layers3, Sparkles, ArrowUpRight, Download, ExternalLink, 
     Brain, Search, ScanLine, KeyRound, Fingerprint, Wifi, Bug2,
-    ScrollText, Terminal2, Hexagon
+    ScrollText, Terminal2, Hexagon, Sun, Moon, Menu as MenuIcon, 
+    Eye as EyeIcon, ArrowUp, ChevronRight, Plus, Minus, Mail,
+    Github, Twitter, Linkedin, Sparkle, Rocket, Shield2, User, LogOut
 } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 const LandingPage = () => {
     const navigate = useNavigate();
+    const { isAuthenticated, user, logout } = useAuth();
     const [isScanning, setIsScanning] = useState(false);
     const [scanProgress, setScanProgress] = useState(0);
     const [url, setUrl] = useState('');
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [activeFeature, setActiveFeature] = useState(0);
     const [scrollY, setScrollY] = useState(0);
+    const [visibleSections, setVisibleSections] = useState({});
+
+    const handleLogout = () => {
+        logout();
+    };
     
-    const featuresRef = useRef(null);
     const statsRef = useRef(null);
+    const featuresRef = useRef(null);
 
     useEffect(() => {
         const handleScroll = () => setScrollY(window.scrollY);
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        setVisibleSections(prev => ({
+                            ...prev,
+                            [entry.target.id]: true
+                        }));
+                    }
+                });
+            },
+            { threshold: 0.1 }
+        );
+
+        document.querySelectorAll('[data-animate]').forEach(el => observer.observe(el));
+        return () => observer.disconnect();
     }, []);
 
     useEffect(() => {
@@ -45,57 +73,63 @@ const LandingPage = () => {
 
     const features = [
         {
-            icon: <ScanLine className="w-8 h-8" />,
+            icon: <ScanLine className="w-7 h-7" />,
             title: "Deep Vulnerability Scanning",
             description: "Advanced crawler technology discovers hidden endpoints, APIs, and potential entry points across your entire web application.",
-            color: "#6366f1"
+            color: "#6366f1",
+            colorLight: "#eef2ff"
         },
         {
-            icon: <Shield className="w-8 h-8" />,
+            icon: <Shield className="w-7 h-7" />,
             title: "OWASP Top 10 Coverage",
             description: "Comprehensive detection of all OWASP Top 10 vulnerabilities including injection, broken authentication, and security misconfigurations.",
-            color: "#10b981"
+            color: "#10b981",
+            colorLight: "#ecfdf5"
         },
         {
-            icon: <Smartphone className="w-8 h-8" />,
+            icon: <Smartphone className="w-7 h-7" />,
             title: "Mobile App Security",
             description: "Specialized Android and iOS security testing with MASVS compliance. Analyze APKs, source code, and network traffic.",
-            color: "#f59e0b"
+            color: "#f59e0b",
+            colorLight: "#fffbeb"
         },
         {
-            icon: <Bot className="w-8 h-8" />,
+            icon: <Bot className="w-7 h-7" />,
             title: "AI-Powered Analysis",
             description: "Groq-powered AI assistant provides detailed remediation guidance, CVE explanations, and security best practices.",
-            color: "#ec4899"
+            color: "#ec4899",
+            colorLight: "#fdf2f8"
         },
         {
-            icon: <Terminal className="w-8 h-8" />,
+            icon: <Terminal className="w-7 h-7" />,
             title: "Hands-on Labs",
             description: "Interactive Linux terminal and learning center with real-world security exercises. Master ethical hacking techniques.",
-            color: "#14b8a6"
+            color: "#14b8a6",
+            colorLight: "#f0fdfa"
         },
         {
-            icon: <Database className="w-8 h-8" />,
+            icon: <Database className="w-7 h-7" />,
             title: "GHDB Dork Patterns",
             description: "Leverage Google Hacking Database patterns to discover exposed data, misconfigurations, and sensitive information leaks.",
-            color: "#8b5cf6"
+            color: "#8b5cf6",
+            colorLight: "#f5f3ff"
         }
     ];
 
     const stats = [
-        { value: "50+", label: "Vulnerability Patterns", icon: <Bug className="w-6 h-6" /> },
-        { value: "100K+", label: "Vulnerabilities Found", icon: <Target className="w-6 h-6" /> },
-        { value: "99.9%", label: "Detection Rate", icon: <Activity className="w-6 h-6" /> },
-        { value: "<3s", label: "Average Scan Time", icon: <Zap className="w-6 h-6" /> }
+        { value: "50+", label: "Vulnerability Patterns", icon: <Bug className="w-5 h-5" /> },
+        { value: "100K+", label: "Vulnerabilities Found", icon: <Target className="w-5 h-5" /> },
+        { value: "99.9%", label: "Detection Rate", icon: <Activity className="w-5 h-5" /> },
+        { value: "<3s", label: "Average Scan Time", icon: <Zap className="w-5 h-5" /> }
     ];
 
     const scanningFeatures = [
-        { icon: <Server />, label: "Server Analysis" },
-        { icon: <Globe />, label: "Web Apps" },
-        { icon: <Smartphone />, label: "Mobile Apps" },
-        { icon: <Code />, label: "APIs & APIs" },
-        { icon: <Database />, label: "Databases" },
-        { icon: <Lock />, label: "Auth Systems" }
+        { icon: <Server className="w-5 h-5" />, label: "Server Analysis" },
+        { icon: <Globe className="w-5 h-5" />, label: "Web Apps" },
+        { icon: <Smartphone className="w-5 h-5" />, label: "Mobile Apps" },
+        { icon: <Code className="w-5 h-5" />, label: "APIs" },
+        { icon: <Database className="w-5 h-5" />, label: "Databases" },
+        { icon: <Lock className="w-5 h-5" />, label: "Auth Systems" }
     ];
 
     const testimonials = [
@@ -143,210 +177,304 @@ const LandingPage = () => {
         }
     ];
 
+    const howItWorks = [
+        {
+            step: "01",
+            icon: <Search className="w-8 h-8" />,
+            title: "Enter Target URL",
+            description: "Simply enter the URL of the web application you want to scan"
+        },
+        {
+            step: "02",
+            icon: <Scan className="w-8 h-8" />,
+            title: "Start Scanning",
+            description: "Our advanced crawler maps your entire application surface"
+        },
+        {
+            step: "03",
+            icon: <Shield className="w-8 h-8" />,
+            title: "Get Results",
+            description: "Receive detailed vulnerability reports with remediation steps"
+        }
+    ];
+
     return (
-        <div className="landing-page">
+        <div className="landing-page-light">
             {/* Navigation */}
-            <nav className="landing-nav" style={{ transform: `translateY(${scrollY > 50 ? '0' : '-100%'})` }}>
-                <div className="nav-container">
-                    <Link to="/" className="nav-logo">
-                        <div className="logo-icon">
-                            <Shield className="w-6 h-6" />
+            <nav className="light-nav" style={{ transform: `translateY(${scrollY > 50 ? '-100%' : '0'})` }}>
+                <div className="nav-container-light">
+                    <Link to="/" className="nav-logo-light">
+                        <div className="logo-icon-light">
+                            <Shield className="w-5 h-5" />
                         </div>
                         <span>VulnScan Pro</span>
                     </Link>
                     
-                    <div className="nav-links-desktop">
+                    <div className="nav-links-desktop-light">
                         <a href="#features">Features</a>
-                        <a href="#scanning">Scanning</a>
+                        <a href="#how-it-works">How It Works</a>
                         <a href="#pricing">Pricing</a>
                         <a href="#testimonials">Reviews</a>
                     </div>
 
-                    <div className="nav-actions">
-                        <Link to="/login" className="btn-ghost">Sign In</Link>
-                        <Link to="/register" className="btn-primary-gradient">Get Started Free</Link>
+                    <div className="nav-actions-light">
+                        {isAuthenticated ? (
+                            <>
+                                <Link to="/dashboard" className="btn-light-ghost" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <User className="w-4 h-4" />
+                                    {user?.username}
+                                </Link>
+                                <button onClick={handleLogout} className="btn-light-ghost" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <LogOut className="w-4 h-4" />
+                                    Logout
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <Link to="/login" className="btn-light-ghost">Sign In</Link>
+                                <Link to="/register" className="btn-light-primary">Get Started Free</Link>
+                            </>
+                        )}
                     </div>
 
-                    <button className="mobile-menu-btn" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-                        {mobileMenuOpen ? <X /> : <Menu />}
+                    <button className="mobile-menu-btn-light" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+                        {mobileMenuOpen ? <X className="w-6 h-6" /> : <MenuIcon className="w-6 h-6" />}
                     </button>
                 </div>
 
                 {mobileMenuOpen && (
-                    <div className="mobile-menu">
+                    <div className="mobile-menu-light">
                         <a href="#features" onClick={() => setMobileMenuOpen(false)}>Features</a>
-                        <a href="#scanning" onClick={() => setMobileMenuOpen(false)}>Scanning</a>
+                        <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)}>How It Works</a>
                         <a href="#pricing" onClick={() => setMobileMenuOpen(false)}>Pricing</a>
                         <a href="#testimonials" onClick={() => setMobileMenuOpen(false)}>Reviews</a>
-                        <div className="mobile-menu-actions">
-                            <Link to="/login" className="btn-ghost" onClick={() => setMobileMenuOpen(false)}>Sign In</Link>
-                            <Link to="/register" className="btn-primary-gradient" onClick={() => setMobileMenuOpen(false)}>Get Started</Link>
+                        <div className="mobile-menu-actions-light">
+                            {isAuthenticated ? (
+                                <>
+                                    <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>
+                                        <User className="w-4 h-4 mr-2" />
+                                        {user?.username}
+                                    </Link>
+                                    <button onClick={() => { handleLogout(); setMobileMenuOpen(false); }} className="btn-primary-light-fill">
+                                        <LogOut className="w-4 h-4 mr-2" />
+                                        Logout
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    <Link to="/login" onClick={() => setMobileMenuOpen(false)}>Sign In</Link>
+                                    <Link to="/register" className="btn-primary-light-fill" onClick={() => setMobileMenuOpen(false)}>Get Started</Link>
+                                </>
+                            )}
                         </div>
                     </div>
                 )}
             </nav>
 
             {/* Hero Section */}
-            <section className="hero-section">
-                <div className="hero-background">
-                    <div className="hero-grid"></div>
-                    <div className="hero-glow hero-glow-1"></div>
-                    <div className="hero-glow hero-glow-2"></div>
-                    <div className="hero-particles">
-                        {[...Array(20)].map((_, i) => (
-                            <div key={i} className="particle" style={{
-                                left: `${Math.random() * 100}%`,
-                                animationDelay: `${Math.random() * 5}s`,
-                                animationDuration: `${3 + Math.random() * 4}s`
-                            }}></div>
-                        ))}
-                    </div>
+            <section className="hero-section-light">
+                <div className="hero-bg-light">
+                    <div className="hero-grid-light"></div>
+                    <div className="hero-blob hero-blob-1"></div>
+                    <div className="hero-blob hero-blob-2"></div>
+                    <div className="hero-blob hero-blob-3"></div>
                 </div>
 
-                <div className="hero-content">
-                    <div className="hero-badge">
-                        <Sparkles className="w-4 h-4" />
+                <div className="hero-content-light">
+                    <div className="hero-badge-light animate-fade-up">
+                        <Sparkle className="w-4 h-4" />
                         <span>AI-Powered Security Scanner</span>
                     </div>
 
-                    <h1 className="hero-title">
+                    <h1 className="hero-title-light animate-fade-up" style={{ animationDelay: '0.1s' }}>
                         Find Every Vulnerability
                         <br />
-                        <span className="gradient-text">Before Hackers Do</span>
+                        <span className="gradient-text-light">Before Hackers Do</span>
                     </h1>
 
-                    <p className="hero-description">
+                    <p className="hero-description-light animate-fade-up" style={{ animationDelay: '0.2s' }}>
                         The most comprehensive web and mobile application security scanner. 
                         Powered by advanced AI, it discovers OWASP Top 10 vulnerabilities, 
                         React/Node.js security issues, and mobile app flaws with unprecedented accuracy.
                     </p>
 
                     {/* Quick Scan Form */}
-                    <div className="quick-scan-container">
-                        <form onSubmit={handleQuickScan} className="quick-scan-form">
-                            <div className="scan-input-wrapper">
-                                <Globe className="scan-input-icon" />
+                    <div className="quick-scan-light animate-fade-up" style={{ animationDelay: '0.3s' }}>
+                        <form onSubmit={handleQuickScan} className="quick-scan-form-light">
+                            <div className="scan-input-wrapper-light">
+                                <Globe className="scan-icon-light" />
                                 <input
                                     type="url"
                                     placeholder="Enter target URL (e.g., https://example.com)"
                                     value={url}
                                     onChange={(e) => setUrl(e.target.value)}
-                                    className="scan-input"
+                                    className="scan-input-light"
                                     required
                                 />
                             </div>
-                            <button type="submit" className="scan-btn">
+                            <button type="submit" className="scan-btn-light">
                                 <Scan className="w-5 h-5" />
                                 Start Scan
                             </button>
                         </form>
-                        <p className="scan-note">
-                            <Lock className="w-4 h-4" />
-                            Secure scanning • No credentials required • Instant results
-                        </p>
+                        <div className="scan-features-light">
+                            <span><Shield className="w-4 h-4" /> Secure scanning</span>
+                            <span><Zap className="w-4 h-4" /> No credentials required</span>
+                            <span><Rocket className="w-4 h-4" /> Instant results</span>
+                        </div>
                     </div>
 
                     {/* Trust Badges */}
-                    <div className="trust-section">
-                        <span className="trust-label">Trusted by security teams at</span>
-                        <div className="trust-logos">
-                            <span className="trust-logo">Google</span>
-                            <span className="trust-logo">Microsoft</span>
-                            <span className="trust-logo">Amazon</span>
-                            <span className="trust-logo">Stripe</span>
-                            <span className="trust-logo">Shopify</span>
+                    <div className="trust-section-light animate-fade-up" style={{ animationDelay: '0.4s' }}>
+                        <span className="trust-label-light">Trusted by security teams at</span>
+                        <div className="trust-logos-light">
+                            <span className="trust-logo-light">Google</span>
+                            <span className="trust-logo-light">Microsoft</span>
+                            <span className="trust-logo-light">Amazon</span>
+                            <span className="trust-logo-light">Stripe</span>
+                            <span className="trust-logo-light">Shopify</span>
                         </div>
                     </div>
                 </div>
 
                 {/* Hero Visual */}
-                <div className="hero-visual">
-                    <div className="scan-preview">
-                        <div className="preview-header">
-                            <div className="preview-dots">
+                <div className="hero-visual-light animate-fade-up" style={{ animationDelay: '0.5s' }}>
+                    <div className="scan-preview-light">
+                        <div className="preview-header-light">
+                            <div className="preview-dots-light">
                                 <span></span><span></span><span></span>
                             </div>
-                            <span className="preview-title">VulnScan Pro Scanner</span>
+                            <span className="preview-title-light">VulnScan Pro Scanner</span>
                         </div>
-                        <div className="preview-content">
-                            <div className="preview-scan-line">
-                                <ScanLine className="w-4 h-4" />
-                                <span>Scanning target...</span>
-                                <div className="scan-progress-bar">
-                                    <div className="scan-progress-fill" style={{ width: '65%' }}></div>
+                        <div className="preview-content-light">
+                            <div className="preview-scan-animation">
+                                <div className="scan-animation-row">
+                                    <ScanLine className="w-4 h-4 text-primary" />
+                                    <span>Scanning target...</span>
+                                    <div className="mini-progress">
+                                        <div className="mini-progress-fill"></div>
+                                    </div>
+                                    <span className="scan-percent">65%</span>
                                 </div>
                             </div>
-                            <div className="preview-vulns">
-                                <div className="preview-vuln critical">
-                                    <AlertTriangle className="w-4 h-4" />
-                                    <span>SQL Injection detected</span>
-                                    <span className="vuln-line"></span>
+                            <div className="preview-findings">
+                                <div className="finding-item critical">
+                                    <div className="finding-icon"><AlertTriangle className="w-4 h-4" /></div>
+                                    <div className="finding-info">
+                                        <span className="finding-title">SQL Injection detected</span>
+                                        <span className="finding-path">login.php?id=</span>
+                                    </div>
+                                    <div className="finding-severity">Critical</div>
                                 </div>
-                                <div className="preview-vuln high">
-                                    <AlertTriangle className="w-4 h-4" />
-                                    <span>XSS vulnerability found</span>
-                                    <span className="vuln-line"></span>
+                                <div className="finding-item high">
+                                    <div className="finding-icon"><AlertTriangle className="w-4 h-4" /></div>
+                                    <div className="finding-info">
+                                        <span className="finding-title">XSS vulnerability found</span>
+                                        <span className="finding-path">search?q=</span>
+                                    </div>
+                                    <div className="finding-severity">High</div>
                                 </div>
-                                <div className="preview-vuln medium">
-                                    <AlertTriangle className="w-4 h-4" />
-                                    <span>Missing security headers</span>
-                                    <span className="vuln-line"></span>
+                                <div className="finding-item medium">
+                                    <div className="finding-icon"><AlertTriangle className="w-4 h-4" /></div>
+                                    <div className="finding-info">
+                                        <span className="finding-title">Missing security headers</span>
+                                        <span className="finding-path">CSP, X-Frame-Options</span>
+                                    </div>
+                                    <div className="finding-severity">Medium</div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="scroll-indicator">
+                <div className="scroll-indicator-light">
                     <ChevronDown className="w-6 h-6 animate-bounce" />
                 </div>
             </section>
 
             {/* Stats Section */}
-            <section className="stats-section" ref={statsRef}>
-                <div className="stats-container">
+            <section className="stats-section-light">
+                <div className="stats-container-light">
                     {stats.map((stat, index) => (
-                        <div key={index} className="stat-card-landing">
-                            <div className="stat-icon">{stat.icon}</div>
-                            <div className="stat-value">{stat.value}</div>
-                            <div className="stat-label">{stat.label}</div>
+                        <div key={index} className="stat-card-light animate-on-scroll" ref={statsRef}>
+                            <div className="stat-icon-light">{stat.icon}</div>
+                            <div className="stat-value-light">{stat.value}</div>
+                            <div className="stat-label-light">{stat.label}</div>
                         </div>
                     ))}
                 </div>
             </section>
 
             {/* Features Section */}
-            <section className="features-section" id="features">
-                <div className="section-container">
-                    <div className="section-header-center">
-                        <span className="section-badge">
+            <section className="features-section-light" id="features">
+                <div className="section-container-light">
+                    <div className="section-header-light text-center">
+                        <span className="section-badge-light">
                             <Layers3 className="w-4 h-4" />
                             Features
                         </span>
-                        <h2 className="section-title">
+                        <h2 className="section-title-light">
                             Everything You Need for
                             <br />
-                            <span className="gradient-text">Complete Security</span>
+                            <span className="gradient-text-light">Complete Security</span>
                         </h2>
-                        <p className="section-description">
+                        <p className="section-description-light">
                             From automated vulnerability scanning to hands-on security labs, 
                             VulnScan Pro provides the complete toolkit for securing your applications.
                         </p>
                     </div>
 
-                    <div className="features-grid">
+                    <div className="features-grid-light">
                         {features.map((feature, index) => (
                             <div 
                                 key={index} 
-                                className={`feature-card ${activeFeature === index ? 'active' : ''}`}
+                                className={`feature-card-light ${activeFeature === index ? 'active' : ''}`}
                                 onMouseEnter={() => setActiveFeature(index)}
                             >
-                                <div className="feature-icon" style={{ background: `${feature.color}20`, color: feature.color }}>
+                                <div 
+                                    className="feature-icon-light" 
+                                    style={{ background: feature.colorLight, color: feature.color }}
+                                >
                                     {feature.icon}
                                 </div>
-                                <h3 className="feature-title">{feature.title}</h3>
-                                <p className="feature-description">{feature.description}</p>
-                                <div className="feature-indicator" style={{ background: feature.color }}></div>
+                                <h3 className="feature-title-light">{feature.title}</h3>
+                                <p className="feature-description-light">{feature.description}</p>
+                                <div className="feature-link-light">
+                                    Learn more <ChevronRight className="w-4 h-4" />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* How It Works */}
+            <section className="how-section-light" id="how-it-works">
+                <div className="section-container-light">
+                    <div className="section-header-light text-center">
+                        <span className="section-badge-light">
+                            <Rocket className="w-4 h-4" />
+                            How It Works
+                        </span>
+                        <h2 className="section-title-light">
+                            Scan in Minutes,
+                            <br />
+                            <span className="gradient-text-light">Not Hours</span>
+                        </h2>
+                    </div>
+
+                    <div className="how-steps-light">
+                        {howItWorks.map((step, index) => (
+                            <div key={index} className="how-step-light">
+                                <div className="step-number-light">{step.step}</div>
+                                <div className="step-icon-light">{step.icon}</div>
+                                <h3 className="step-title-light">{step.title}</h3>
+                                <p className="step-description-light">{step.description}</p>
+                                {index < howItWorks.length - 1 && (
+                                    <div className="step-connector">
+                                        <ArrowRight className="w-5 h-5" />
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>
@@ -354,87 +482,77 @@ const LandingPage = () => {
             </section>
 
             {/* Scanning Capabilities */}
-            <section className="scanning-section" id="scanning">
-                <div className="section-container">
-                    <div className="scanning-content">
-                        <div className="scanning-text">
-                            <span className="section-badge">
+            <section className="capabilities-section-light">
+                <div className="section-container-light">
+                    <div className="capabilities-grid-light">
+                        <div className="capabilities-text-light">
+                            <span className="section-badge-light">
                                 <Scan className="w-4 h-4" />
                                 Scanning Engine
                             </span>
-                            <h2 className="section-title-left">
+                            <h2 className="section-title-light text-left">
                                 Deep Scanning That
                                 <br />
-                                <span className="gradient-text">Never Misses</span>
+                                <span className="gradient-text-light">Never Misses</span>
                             </h2>
-                            <p className="scanning-description">
+                            <p className="capabilities-description-light">
                                 Our advanced crawling engine maps your entire application surface, 
                                 discovering hidden endpoints, APIs, and attack vectors that other scanners miss.
                             </p>
 
-                            <div className="scanning-features">
+                            <div className="capabilities-list-light">
                                 {scanningFeatures.map((feature, index) => (
-                                    <div key={index} className="scanning-feature">
-                                        <div className="feature-check">
+                                    <div key={index} className="capability-item-light">
+                                        <div className="capability-check">
                                             <CheckCircle className="w-5 h-5" />
                                         </div>
-                                        <div className="feature-info">
-                                            <div className="feature-icon-small">{feature.icon}</div>
-                                            <span>{feature.label}</span>
-                                        </div>
+                                        <div className="capability-icon-sm">{feature.icon}</div>
+                                        <span>{feature.label}</span>
                                     </div>
                                 ))}
                             </div>
 
-                            <div className="scanning-actions">
-                                <Link to="/register" className="btn-primary-gradient">
+                            <div className="capabilities-actions-light">
+                                <Link to="/register" className="btn-primary-light-fill">
                                     Start Free Scan
                                     <ArrowRight className="w-5 h-5" />
                                 </Link>
-                                <Link to="/dorks" className="btn-outline">
+                                <Link to="/dorks" className="btn-light-outline">
                                     <FileSearch className="w-5 h-5" />
                                     Explore Dork Patterns
                                 </Link>
                             </div>
                         </div>
 
-                        <div className="scanning-visual">
-                            <div className="capabilities-list">
-                                <div className="capability-item">
-                                    <div className="capability-icon critical">
-                                        <Bug className="w-5 h-5" />
+                        <div className="capabilities-visual-light">
+                            <div className="capability-cards-light">
+                                <div className="cap-card-light">
+                                    <div className="cap-card-icon critical">
+                                        <Bug className="w-6 h-6" />
                                     </div>
-                                    <div className="capability-content">
-                                        <h4>OWASP Top 10</h4>
-                                        <p>Complete coverage of all critical web application risks</p>
-                                    </div>
+                                    <h4>OWASP Top 10</h4>
+                                    <p>Complete coverage of all critical web application risks</p>
                                 </div>
-                                <div className="capability-item">
-                                    <div className="capability-icon high">
-                                        <Code className="w-5 h-5" />
+                                <div className="cap-card-light">
+                                    <div className="cap-card-icon high">
+                                        <Code className="w-6 h-6" />
                                     </div>
-                                    <div className="capability-content">
-                                        <h4>React & Node.js</h4>
-                                        <p>Specialized patterns for modern JavaScript frameworks</p>
-                                    </div>
+                                    <h4>React & Node.js</h4>
+                                    <p>Specialized patterns for modern JavaScript frameworks</p>
                                 </div>
-                                <div className="capability-item">
-                                    <div className="capability-icon medium">
-                                        <Smartphone className="w-5 h-5" />
+                                <div className="cap-card-light">
+                                    <div className="cap-card-icon medium">
+                                        <Smartphone className="w-6 h-6" />
                                     </div>
-                                    <div className="capability-content">
-                                        <h4>Mobile Apps</h4>
-                                        <p>Android & iOS security testing with MASVS</p>
-                                    </div>
+                                    <h4>Mobile Apps</h4>
+                                    <p>Android & iOS security testing with MASVS</p>
                                 </div>
-                                <div className="capability-item">
-                                    <div className="capability-icon info">
-                                        <Lock className="w-5 h-5" />
+                                <div className="cap-card-light">
+                                    <div className="cap-card-icon info">
+                                        <Lock className="w-6 h-6" />
                                     </div>
-                                    <div className="capability-content">
-                                        <h4>API Security</h4>
-                                        <p>REST, GraphQL, and Microservices vulnerabilities</p>
-                                    </div>
+                                    <h4>API Security</h4>
+                                    <p>REST, GraphQL, and Microservices vulnerabilities</p>
                                 </div>
                             </div>
                         </div>
@@ -442,37 +560,38 @@ const LandingPage = () => {
                 </div>
             </section>
 
-            {/* AI Assistant Section */}
-            <section className="ai-section">
-                <div className="section-container">
-                    <div className="ai-content">
-                        <div className="ai-visual">
-                            <div className="ai-chat-preview">
-                                <div className="chat-header">
+            {/* AI Section */}
+            <section className="ai-section-light">
+                <div className="section-container-light">
+                    <div className="ai-grid-light">
+                        <div className="ai-visual-light">
+                            <div className="ai-chat-light">
+                                <div className="chat-header-light">
                                     <Bot className="w-5 h-5" />
                                     <span>AI Security Assistant</span>
+                                    <div className="ai-status">Online</div>
                                 </div>
-                                <div className="chat-messages">
-                                    <div className="chat-message bot">
-                                        <div className="message-avatar">
+                                <div className="chat-messages-light">
+                                    <div className="chat-msg-light bot">
+                                        <div className="msg-avatar-light">
                                             <Bot className="w-4 h-4" />
                                         </div>
-                                        <div className="message-content">
+                                        <div className="msg-content-light">
                                             <p>I found a critical SQL injection vulnerability in the login form. Would you like me to explain the remediation steps?</p>
                                         </div>
                                     </div>
-                                    <div className="chat-message user">
-                                        <div className="message-content">
+                                    <div className="chat-msg-light user">
+                                        <div className="msg-content-light user-msg">
                                             <p>Yes, please provide detailed remediation guidance.</p>
                                         </div>
                                     </div>
-                                    <div className="chat-message bot">
-                                        <div className="message-avatar">
+                                    <div className="chat-msg-light bot">
+                                        <div className="msg-avatar-light">
                                             <Bot className="w-4 h-4" />
                                         </div>
-                                        <div className="message-content">
+                                        <div className="msg-content-light">
                                             <p>Here's how to fix the SQL injection:</p>
-                                            <ul>
+                                            <ul className="remediation-list">
                                                 <li>Use parameterized queries</li>
                                                 <li>Implement input validation</li>
                                                 <li>Use an ORM like Prisma</li>
@@ -483,42 +602,42 @@ const LandingPage = () => {
                             </div>
                         </div>
 
-                        <div className="ai-text">
-                            <span className="section-badge">
+                        <div className="ai-text-light">
+                            <span className="section-badge-light">
                                 <Brain className="w-4 h-4" />
                                 AI-Powered
                             </span>
-                            <h2 className="section-title-left">
+                            <h2 className="section-title-light text-left">
                                 Security Intelligence
                                 <br />
-                                <span className="gradient-text">On Demand</span>
+                                <span className="gradient-text-light">On Demand</span>
                             </h2>
-                            <p className="ai-description">
+                            <p className="ai-description-light">
                                 Our Groq-powered AI assistant doesn't just find vulnerabilities—it helps you 
                                 understand and fix them. Get instant explanations, remediation guidance, 
                                 CVE analysis, and security best practices.
                             </p>
 
-                            <div className="ai-features">
-                                <div className="ai-feature">
+                            <div className="ai-features-light">
+                                <div className="ai-feature-light">
                                     <ShieldCheck className="w-5 h-5" />
                                     <span>Detailed remediation steps</span>
                                 </div>
-                                <div className="ai-feature">
+                                <div className="ai-feature-light">
                                     <ScrollText className="w-5 h-5" />
                                     <span>CVE explanations</span>
                                 </div>
-                                <div className="ai-feature">
+                                <div className="ai-feature-light">
                                     <Target className="w-5 h-5" />
                                     <span>Attack scenario simulations</span>
                                 </div>
-                                <div className="ai-feature">
+                                <div className="ai-feature-light">
                                     <Code className="w-5 h-5" />
                                     <span>Secure code examples</span>
                                 </div>
                             </div>
 
-                            <Link to="/ai-assistant" className="btn-primary-gradient">
+                            <Link to="/ai-assistant" className="btn-primary-light-fill">
                                 <Bot className="w-5 h-5" />
                                 Try AI Assistant
                             </Link>
@@ -528,32 +647,32 @@ const LandingPage = () => {
             </section>
 
             {/* Testimonials */}
-            <section className="testimonials-section" id="testimonials">
-                <div className="section-container">
-                    <div className="section-header-center">
-                        <span className="section-badge">
+            <section className="testimonials-section-light" id="testimonials">
+                <div className="section-container-light">
+                    <div className="section-header-light text-center">
+                        <span className="section-badge-light">
                             <Star className="w-4 h-4" />
                             Testimonials
                         </span>
-                        <h2 className="section-title">
+                        <h2 className="section-title-light">
                             Loved by Security
                             <br />
-                            <span className="gradient-text">Professionals</span>
+                            <span className="gradient-text-light">Professionals</span>
                         </h2>
                     </div>
 
-                    <div className="testimonials-grid">
+                    <div className="testimonials-grid-light">
                         {testimonials.map((testimonial, index) => (
-                            <div key={index} className="testimonial-card">
+                            <div key={index} className="testimonial-card-light">
                                 <div className="testimonial-stars">
                                     {[...Array(5)].map((_, i) => (
                                         <Star key={i} className="w-4 h-4 filled" />
                                     ))}
                                 </div>
-                                <p className="testimonial-content">"{testimonial.content}"</p>
-                                <div className="testimonial-author">
-                                    <div className="author-avatar">{testimonial.avatar}</div>
-                                    <div className="author-info">
+                                <p className="testimonial-content-light">"{testimonial.content}"</p>
+                                <div className="testimonial-author-light">
+                                    <div className="author-avatar-light">{testimonial.avatar}</div>
+                                    <div className="author-info-light">
                                         <h4>{testimonial.name}</h4>
                                         <p>{testimonial.role}</p>
                                     </div>
@@ -565,31 +684,31 @@ const LandingPage = () => {
             </section>
 
             {/* Pricing */}
-            <section className="pricing-section" id="pricing">
-                <div className="section-container">
-                    <div className="section-header-center">
-                        <span className="section-badge">
+            <section className="pricing-section-light" id="pricing">
+                <div className="section-container-light">
+                    <div className="section-header-light text-center">
+                        <span className="section-badge-light">
                             <BarChart3 className="w-4 h-4" />
                             Pricing
                         </span>
-                        <h2 className="section-title">
+                        <h2 className="section-title-light">
                             Simple, Transparent
                             <br />
-                            <span className="gradient-text">Pricing</span>
+                            <span className="gradient-text-light">Pricing</span>
                         </h2>
-                        <p className="section-description">
+                        <p className="section-description-light">
                             Start free, scale as you grow. No hidden fees, no surprises.
                         </p>
                     </div>
 
-                    <div className="pricing-grid">
+                    <div className="pricing-grid-light">
                         {pricingPlans.map((plan, index) => (
-                            <div key={index} className={`pricing-card ${plan.popular ? 'popular' : ''}`}>
-                                {plan.popular && <span className="popular-badge">Most Popular</span>}
-                                <h3 className="plan-name">{plan.name}</h3>
-                                <div className="plan-price">{plan.price}</div>
-                                <p className="plan-description">{plan.description}</p>
-                                <ul className="plan-features">
+                            <div key={index} className={`pricing-card-light ${plan.popular ? 'popular' : ''}`}>
+                                {plan.popular && <span className="popular-badge-light">Most Popular</span>}
+                                <h3 className="plan-name-light">{plan.name}</h3>
+                                <div className="plan-price-light">{plan.price}</div>
+                                <p className="plan-description-light">{plan.description}</p>
+                                <ul className="plan-features-light">
                                     {plan.features.map((feature, i) => (
                                         <li key={i}>
                                             <CheckCircle className="w-4 h-4" />
@@ -599,7 +718,7 @@ const LandingPage = () => {
                                 </ul>
                                 <Link 
                                     to="/register" 
-                                    className={`plan-btn ${plan.popular ? 'btn-primary-gradient' : 'btn-outline'}`}
+                                    className={`plan-btn-light ${plan.popular ? 'btn-primary-light-fill' : 'btn-light-outline'}`}
                                 >
                                     {plan.name === 'Enterprise' ? 'Contact Sales' : 'Get Started'}
                                 </Link>
@@ -610,24 +729,24 @@ const LandingPage = () => {
             </section>
 
             {/* CTA Section */}
-            <section className="cta-section">
-                <div className="cta-container">
-                    <div className="cta-glow"></div>
-                    <h2 className="cta-title">
+            <section className="cta-section-light">
+                <div className="cta-container-light">
+                    <div className="cta-blob-light"></div>
+                    <h2 className="cta-title-light">
                         Ready to Secure Your
                         <br />
-                        <span className="gradient-text">Applications?</span>
+                        <span className="gradient-text-light">Applications?</span>
                     </h2>
-                    <p className="cta-description">
+                    <p className="cta-description-light">
                         Join thousands of developers and security teams who trust VulnScan Pro 
                         to protect their applications from vulnerabilities.
                     </p>
-                    <div className="cta-actions">
-                        <Link to="/register" className="btn-primary-gradient large">
+                    <div className="cta-actions-light">
+                        <Link to="/register" className="btn-primary-light-fill large">
                             Start Free Today
                             <ArrowRight className="w-5 h-5" />
                         </Link>
-                        <Link to="/dorks" className="btn-outline large">
+                        <Link to="/dorks" className="btn-light-outline large">
                             <Hexagon className="w-5 h-5" />
                             Explore Patterns
                         </Link>
@@ -636,42 +755,47 @@ const LandingPage = () => {
             </section>
 
             {/* Footer */}
-            <footer className="landing-footer">
-                <div className="footer-container">
-                    <div className="footer-main">
-                        <div className="footer-brand">
-                            <Link to="/" className="nav-logo">
-                                <div className="logo-icon">
-                                    <Shield className="w-6 h-6" />
+            <footer className="footer-light">
+                <div className="footer-container-light">
+                    <div className="footer-main-light">
+                        <div className="footer-brand-light">
+                            <Link to="/" className="nav-logo-light">
+                                <div className="logo-icon-light">
+                                    <Shield className="w-5 h-5" />
                                 </div>
                                 <span>VulnScan Pro</span>
                             </Link>
                             <p>Advanced web and mobile application security scanning powered by AI.</p>
+                            <div className="footer-social-light">
+                                <a href="#"><Twitter className="w-5 h-5" /></a>
+                                <a href="#"><Github className="w-5 h-5" /></a>
+                                <a href="#"><Linkedin className="w-5 h-5" /></a>
+                            </div>
                         </div>
                         
-                        <div className="footer-links">
-                            <div className="footer-column">
+                        <div className="footer-links-light">
+                            <div className="footer-col-light">
                                 <h4>Product</h4>
                                 <a href="#features">Features</a>
                                 <a href="#pricing">Pricing</a>
                                 <Link to="/dorks">Dork Patterns</Link>
                                 <Link to="/mobile">Mobile Security</Link>
                             </div>
-                            <div className="footer-column">
+                            <div className="footer-col-light">
                                 <h4>Resources</h4>
                                 <a href="#testimonials">Reviews</a>
                                 <Link to="/learning">Learning Center</Link>
                                 <Link to="/terminal">Terminal Labs</Link>
                                 <a href="#">Documentation</a>
                             </div>
-                            <div className="footer-column">
+                            <div className="footer-col-light">
                                 <h4>Company</h4>
                                 <a href="#">About Us</a>
                                 <a href="#">Blog</a>
                                 <a href="#">Careers</a>
                                 <a href="#">Contact</a>
                             </div>
-                            <div className="footer-column">
+                            <div className="footer-col-light">
                                 <h4>Legal</h4>
                                 <a href="#">Privacy Policy</a>
                                 <a href="#">Terms of Service</a>
@@ -681,13 +805,8 @@ const LandingPage = () => {
                         </div>
                     </div>
 
-                    <div className="footer-bottom">
-                        <p>&copy; 2026 VulnScan Pro. All rights reserved.</p>
-                        <div className="footer-social">
-                            <a href="#" aria-label="Twitter"><Globe2 className="w-5 h-5" /></a>
-                            <a href="#" aria-label="GitHub"><Code className="w-5 h-5" /></a>
-                            <a href="#" aria-label="LinkedIn"><Users className="w-5 h-5" /></a>
-                        </div>
+                    <div className="footer-bottom-light">
+                        <p>© 2026 VulnScan Pro. All rights reserved.</p>
                     </div>
                 </div>
             </footer>

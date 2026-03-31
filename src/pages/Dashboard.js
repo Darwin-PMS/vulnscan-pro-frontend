@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Scan, Bug, Shield, Activity, Zap, Crown } from 'lucide-react';
+import { Scan, Bug, Shield, Activity, Zap, Crown, User, ArrowRight } from 'lucide-react';
 import { scanApi } from '../services/api';
-import { UsageProgress } from '../components/SubscriptionComponents';
+import { useAuth } from '../contexts/AuthContext';
+import { UsageSummary } from '../components/SubscriptionComponents';
 import StatCard from '../components/StatCard';
 import StatusBadge from '../components/StatusBadge';
 import { formatDistanceToNow } from 'date-fns';
 
 const Dashboard = () => {
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -16,6 +18,13 @@ const Dashboard = () => {
 
     useEffect(() => {
         fetchStats();
+    }, []);
+
+    // Refresh data when component comes into focus
+    useEffect(() => {
+        const handleFocus = () => fetchStats();
+        window.addEventListener('focus', handleFocus);
+        return () => window.removeEventListener('focus', handleFocus);
     }, []);
 
     const fetchStats = async () => {
@@ -60,39 +69,55 @@ const Dashboard = () => {
     return (
         <div>
             <div className="container page-header">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
                     <div>
-                        <h1>Dashboard</h1>
-                        <p>Overview of your vulnerability scanning activities</p>
+                        <h1 style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <span>Welcome back,</span>
+                            <span style={{ color: 'var(--primary-color)' }}>{user?.username || 'User'}</span>
+                        </h1>
+                        <p style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <User size={16} />
+                            {user?.email}
+                        </p>
                     </div>
-                    {tier === 'free' && (
-                        <div style={{
-                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                            color: 'white',
-                            padding: '12px 20px',
-                            borderRadius: '12px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '12px',
-                            cursor: 'pointer'
-                        }} onClick={() => navigate('/pricing')}>
-                            <Zap size={24} />
-                            <div>
-                                <div style={{ fontWeight: 'bold', fontSize: '14px' }}>
-                                    Upgrade for More
-                                </div>
-                                <div style={{ fontSize: '12px', opacity: 0.9 }}>
-                                    Unlock unlimited scans
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <button
+                            className="btn btn-primary"
+                            onClick={() => navigate('/scan')}
+                            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                        >
+                            <Scan size={18} />
+                            New Scan
+                        </button>
+                        {tier === 'free' && (
+                            <div style={{
+                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                color: 'white',
+                                padding: '12px 20px',
+                                borderRadius: '12px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '12px',
+                                cursor: 'pointer'
+                            }} onClick={() => navigate('/pricing')}>
+                                <Zap size={24} />
+                                <div>
+                                    <div style={{ fontWeight: 'bold', fontSize: '14px' }}>
+                                        Upgrade for More
+                                    </div>
+                                    <div style={{ fontSize: '12px', opacity: 0.9 }}>
+                                        Unlock unlimited scans
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
             </div>
 
             <div className="container">
                 {/* Subscription Usage */}
-                <UsageProgress />
+                <UsageSummary />
 
                 {/* Overview Stats */}
                 <div className="grid grid-4" style={{ marginBottom: '32px' }}>

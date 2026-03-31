@@ -36,7 +36,8 @@ export const authApi = {
     register: (userData) => api.post('/auth/register', userData),
     login: (credentials) => api.post('/auth/login', credentials),
     logout: () => api.post('/auth/logout'),
-    getCurrentUser: () => api.get('/auth/me')
+    getCurrentUser: () => api.get('/auth/me'),
+    updateProfile: (data) => api.put('/auth/profile', data)
 };
 
 // Scan API
@@ -48,7 +49,8 @@ export const scanApi = {
     getScanHistory: (scanId) => api.get(`/scans/${scanId}/history`),
     getVulnerabilityById: (vulnId) => api.get(`/scans/vulnerability/${vulnId}`),
     deleteScan: (scanId) => api.delete(`/scans/${scanId}`),
-    getDashboardStats: () => api.get('/scans/stats/dashboard')
+    getDashboardStats: () => api.get('/scans/stats/dashboard'),
+    getUserStats: () => api.get('/scans/user/stats')
 };
 
 // Dork API

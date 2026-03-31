@@ -19,6 +19,22 @@ const NewScan = () => {
         }
     }, [isAuthenticated]);
 
+    // Refresh usage data periodically and on component focus
+    useEffect(() => {
+        if (!isAuthenticated) return;
+
+        const handleFocus = () => fetchUsage();
+        window.addEventListener('focus', handleFocus);
+        
+        // Refresh every 30 seconds
+        const interval = setInterval(fetchUsage, 30000);
+        
+        return () => {
+            window.removeEventListener('focus', handleFocus);
+            clearInterval(interval);
+        };
+    }, [isAuthenticated]);
+
     const fetchUsage = async () => {
         try {
             const res = await api.get('/subscriptions/usage');
@@ -53,6 +69,8 @@ const NewScan = () => {
             const response = await scanApi.startScan(targetUrl);
 
             if (response.data.success) {
+                // Refresh usage data before navigating
+                fetchUsage();
                 navigate(`/scan/${response.data.scanId}`);
             }
         } catch (err) {
@@ -182,43 +200,92 @@ const NewScan = () => {
                         {/* Usage Info */}
                         {isAuthenticated && usage && (
                             <div style={{
-                                padding: '16px',
-                                background: usage.percentageUsed > 80 ? 'rgba(239, 68, 68, 0.1)' : 'rgba(59, 130, 246, 0.1)',
-                                border: `1px solid ${usage.percentageUsed > 80 ? 'rgba(239, 68, 68, 0.3)' : 'rgba(59, 130, 246, 0.3)'}`,
-                                borderRadius: '8px',
-                                marginBottom: '24px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                gap: '16px'
+                                padding: '20px',
+                                background: usage.percentageUsed > 80 
+                                    ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(220, 38, 38, 0.1))' 
+                                    : 'linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(99, 102, 241, 0.1))',
+                                border: `1px solid ${usage.percentageUsed > 80 ? 'rgba(239, 68, 68, 0.4)' : 'rgba(99, 102, 241, 0.3)'}`,
+                                borderRadius: '12px',
+                                marginBottom: '24px'
                             }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                    {usage.tier === 'Free' ? <Zap size={24} style={{ color: usage.percentageUsed > 80 ? '#fca5a5' : '#93c5fd' }} /> : <Crown size={24} style={{ color: '#fbbf24' }} />}
-                                    <div>
-                                        <p style={{ margin: 0, fontWeight: 500 }}>
-                                            {usage.tier} Plan - {usage.isUnlimited ? 'Unlimited scans' : `${usage.scansUsed} of ${usage.scanLimit} scans used`}
-                                        </p>
-                                        {!usage.isUnlimited && (
-                                            <div style={{ marginTop: '8px', width: '200px' }}>
-                                                <div style={{ background: '#e5e7eb', borderRadius: '4px', height: '8px' }}>
-                                                    <div style={{
-                                                        width: `${usage.percentageUsed}%`,
-                                                        background: usage.percentageUsed > 80 ? '#ef4444' : '#3b82f6',
-                                                        height: '100%',
-                                                        borderRadius: '4px'
-                                                    }} />
-                                                </div>
+                                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '20px', flexWrap: 'wrap' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                        <div style={{
+                                            width: '48px',
+                                            height: '48px',
+                                            borderRadius: '12px',
+                                            background: usage.tier === 'Free' 
+                                                ? (usage.percentageUsed > 80 ? 'rgba(239, 68, 68, 0.2)' : 'rgba(99, 102, 241, 0.2)')
+                                                : 'linear-gradient(135deg, #fbbf24, #f59e0b)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center'
+                                        }}>
+                                            {usage.tier === 'Free' ? (
+                                                <Zap size={24} style={{ color: usage.percentageUsed > 80 ? '#ef4444' : 'var(--primary-color)' }} />
+                                            ) : (
+                                                <Crown size={24} style={{ color: 'white' }} />
+                                            )}
+                                        </div>
+                                        <div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                                                <span style={{ fontWeight: '600', fontSize: '15px' }}>{usage.tier}</span>
+                                                <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Plan</span>
                                             </div>
-                                        )}
+                                            {usage.isUnlimited ? (
+                                                <p style={{ margin: 0, color: 'var(--secondary-color)', fontWeight: '500' }}>
+                                                    Unlimited scans available
+                                                </p>
+                                            ) : (
+                                                <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-secondary)' }}>
+                                                    <span style={{ color: usage.percentageUsed > 80 ? '#ef4444' : 'var(--text-primary)', fontWeight: '600' }}>
+                                                        {usage.scanLimit - usage.scansUsed}
+                                                    </span>
+                                                    {' '}scans remaining of {usage.scanLimit}
+                                                </p>
+                                            )}
+                                        </div>
                                     </div>
+                                    
+                                    {!usage.isUnlimited && (
+                                        <div style={{ flex: '1', minWidth: '200px', maxWidth: '300px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '12px' }}>
+                                                <span style={{ color: 'var(--text-secondary)' }}>Usage this month</span>
+                                                <span style={{ fontWeight: '600', color: usage.percentageUsed > 80 ? '#ef4444' : 'var(--text-primary)' }}>
+                                                    {usage.scansUsed} / {usage.scanLimit}
+                                                </span>
+                                            </div>
+                                            <div style={{ background: 'rgba(0, 0, 0, 0.3)', borderRadius: '6px', height: '10px', overflow: 'hidden' }}>
+                                                <div style={{
+                                                    width: `${Math.min(usage.percentageUsed, 100)}%`,
+                                                    background: usage.percentageUsed > 80 
+                                                        ? 'linear-gradient(90deg, #ef4444, #dc2626)'
+                                                        : 'linear-gradient(90deg, var(--primary-color), #8b5cf6)',
+                                                    height: '100%',
+                                                    borderRadius: '6px',
+                                                    transition: 'width 0.3s ease'
+                                                }} />
+                                            </div>
+                                            {usage.percentageUsed > 80 && (
+                                                <p style={{ margin: '8px 0 0 0', fontSize: '12px', color: '#ef4444' }}>
+                                                    Warning: Approaching scan limit
+                                                </p>
+                                            )}
+                                        </div>
+                                    )}
+                                    
+                                    <Link
+                                        to="/pricing"
+                                        className="btn btn-primary"
+                                        style={{ 
+                                            flexShrink: 0, 
+                                            background: usage.percentageUsed > 80 ? '#ef4444' : 'var(--primary-color)',
+                                            padding: '10px 20px'
+                                        }}
+                                    >
+                                        {usage.tier === 'Free' ? 'Upgrade Now' : 'Manage Plan'}
+                                    </Link>
                                 </div>
-                                <Link
-                                    to="/pricing"
-                                    className="btn btn-primary"
-                                    style={{ flexShrink: 0, background: usage.percentageUsed > 80 ? '#ef4444' : 'var(--primary-color)' }}
-                                >
-                                    {usage.tier === 'Free' ? 'Upgrade Now' : 'Manage Plan'}
-                                </Link>
                             </div>
                         )}
 
