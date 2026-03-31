@@ -3,12 +3,14 @@ import {
     Smartphone, Shield, AlertTriangle, CheckCircle, FileText, ChevronRight, 
     ExternalLink, Download, Lock, Eye, Wifi, HardDrive, Database, Code, 
     Upload, Search, RefreshCw, Zap, Terminal, Package, Network, FileCode,
-    ChevronDown, AlertCircle, X, DownloadCloud, Trash2, Copy, File, Loader
+    ChevronDown, AlertCircle, X, DownloadCloud, Trash2, Copy, File, Loader, Sun, Moon
 } from 'lucide-react';
 import { mobileApi } from '../services/api';
 import ReactMarkdown from 'react-markdown';
+import { useTheme } from '../contexts/ThemeContext';
 
 const MobileAppTesting = () => {
+    const { isDark, toggleTheme } = useTheme();
     const [activeTab, setActiveTab] = useState('android');
     const [expandedCheck, setExpandedCheck] = useState(null);
     const [scanMode, setScanMode] = useState('checklist');
@@ -21,6 +23,26 @@ const MobileAppTesting = () => {
     const [securityGuide, setSecurityGuide] = useState(null);
     const [patterns, setPatterns] = useState([]);
     const [selectedVuln, setSelectedVuln] = useState(null);
+
+    const theme = isDark ? {
+        bg: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+        bgCard: 'rgba(255,255,255,0.05)',
+        bgCardHover: 'rgba(255,255,255,0.08)',
+        border: 'rgba(255,255,255,0.1)',
+        text: '#f1f5f9',
+        textSecondary: '#94a3b8',
+        codeBg: 'rgba(0,0,0,0.4)',
+        inputBg: 'rgba(0,0,0,0.2)',
+    } : {
+        bg: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+        bgCard: '#ffffff',
+        bgCardHover: '#f8fafc',
+        border: 'rgba(0,0,0,0.08)',
+        text: '#0f172a',
+        textSecondary: '#475569',
+        codeBg: 'rgba(15, 23, 42, 0.05)',
+        inputBg: '#f1f5f9',
+    };
 
     useEffect(() => {
         loadPatterns();
@@ -148,35 +170,97 @@ const MobileAppTesting = () => {
     };
 
     return (
-        <div>
-            <div className="container page-header">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px' }}>
-                    <Smartphone size={32} style={{ color: 'var(--primary-color)' }} />
-                    <h1>Mobile App Security Testing</h1>
+        <div style={{ minHeight: '100vh', background: theme.bg }}>
+            {/* Header */}
+            <div style={{ 
+                background: theme.bgCard, 
+                borderBottom: `1px solid ${theme.border}`,
+                padding: '24px 0'
+            }}>
+                <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        <Smartphone size={32} style={{ color: '#6366f1' }} />
+                        <div>
+                            <h1 style={{ fontSize: '28px', fontWeight: '700', color: theme.text, marginBottom: '4px' }}>
+                                Mobile App Security Testing
+                            </h1>
+                            <p style={{ color: theme.textSecondary }}>
+                                OWASP MASVS compliance with automated vulnerability scanning for Android and iOS
+                            </p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={toggleTheme}
+                        style={{
+                            background: theme.bgCard,
+                            border: `1px solid ${theme.border}`,
+                            borderRadius: '12px',
+                            padding: '12px',
+                            cursor: 'pointer',
+                            display: 'flex'
+                        }}
+                    >
+                        {isDark ? <Sun size={20} style={{ color: '#fbbf24' }} /> : <Moon size={20} style={{ color: '#6366f1' }} />}
+                    </button>
                 </div>
-                <p>OWASP MASVS compliance with automated vulnerability scanning for Android and iOS</p>
             </div>
 
-            <div className="container">
+            <div className="container" style={{ padding: '24px 0' }}>
                 {/* Mode Toggle */}
                 <div style={{ display: 'flex', gap: '12px', marginBottom: '32px', flexWrap: 'wrap' }}>
                     <button
-                        className={`btn ${scanMode === 'checklist' ? 'btn-primary' : 'btn-secondary'}`}
                         onClick={() => setScanMode('checklist')}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '12px 20px',
+                            background: scanMode === 'checklist' ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : theme.bgCard,
+                            border: `1px solid ${scanMode === 'checklist' ? 'transparent' : theme.border}`,
+                            borderRadius: '10px',
+                            color: scanMode === 'checklist' ? 'white' : theme.text,
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            fontWeight: 500
+                        }}
                     >
                         <CheckCircle size={18} />
                         OWASP Checklist
                     </button>
                     <button
-                        className={`btn ${scanMode === 'scanner' ? 'btn-primary' : 'btn-secondary'}`}
                         onClick={() => setScanMode('scanner')}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '12px 20px',
+                            background: scanMode === 'scanner' ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : theme.bgCard,
+                            border: `1px solid ${scanMode === 'scanner' ? 'transparent' : theme.border}`,
+                            borderRadius: '10px',
+                            color: scanMode === 'scanner' ? 'white' : theme.text,
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            fontWeight: 500
+                        }}
                     >
                         <Search size={18} />
                         Security Scanner
                     </button>
                     <button
-                        className={`btn ${scanMode === 'guide' ? 'btn-primary' : 'btn-secondary'}`}
                         onClick={() => setScanMode('guide')}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '12px 20px',
+                            background: scanMode === 'guide' ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : theme.bgCard,
+                            border: `1px solid ${scanMode === 'guide' ? 'transparent' : theme.border}`,
+                            borderRadius: '10px',
+                            color: scanMode === 'guide' ? 'white' : theme.text,
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            fontWeight: 500
+                        }}
                     >
                         <FileText size={18} />
                         Security Guide
@@ -188,15 +272,39 @@ const MobileAppTesting = () => {
                         {/* Platform Tabs */}
                         <div style={{ display: 'flex', gap: '12px', marginBottom: '32px' }}>
                             <button
-                                className={`btn ${activeTab === 'android' ? 'btn-primary' : 'btn-secondary'}`}
                                 onClick={() => setActiveTab('android')}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    padding: '10px 20px',
+                                    background: activeTab === 'android' ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : theme.bgCard,
+                                    border: `1px solid ${activeTab === 'android' ? 'transparent' : theme.border}`,
+                                    borderRadius: '10px',
+                                    color: activeTab === 'android' ? 'white' : theme.text,
+                                    cursor: 'pointer',
+                                    fontSize: '14px',
+                                    fontWeight: 500
+                                }}
                             >
                                 <Smartphone size={18} />
                                 Android Testing
                             </button>
                             <button
-                                className={`btn ${activeTab === 'ios' ? 'btn-primary' : 'btn-secondary'}`}
                                 onClick={() => setActiveTab('ios')}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    padding: '10px 20px',
+                                    background: activeTab === 'ios' ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : theme.bgCard,
+                                    border: `1px solid ${activeTab === 'ios' ? 'transparent' : theme.border}`,
+                                    borderRadius: '10px',
+                                    color: activeTab === 'ios' ? 'white' : theme.text,
+                                    cursor: 'pointer',
+                                    fontSize: '14px',
+                                    fontWeight: 500
+                                }}
                             >
                                 <Smartphone size={18} />
                                 iOS Testing
@@ -204,20 +312,48 @@ const MobileAppTesting = () => {
                         </div>
 
                         {/* Info Card */}
-                        <div className="card" style={{ marginBottom: '32px', background: 'rgba(99, 102, 241, 0.1)', border: '1px solid var(--primary-color)' }}>
+                        <div style={{
+                            marginBottom: '32px',
+                            background: 'rgba(99, 102, 241, 0.1)',
+                            border: '1px solid #6366f1',
+                            borderRadius: '16px',
+                            padding: '24px'
+                        }}>
                             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
-                                <Shield size={24} style={{ color: 'var(--primary-color)', flexShrink: 0 }} />
+                                <Shield size={24} style={{ color: '#6366f1', flexShrink: 0 }} />
                                 <div>
-                                    <h3 style={{ marginBottom: '8px' }}>OWASP MASVS Compliance</h3>
-                                    <p style={{ color: 'var(--text-secondary)' }}>
+                                    <h3 style={{ marginBottom: '8px', color: theme.text }}>OWASP MASVS Compliance</h3>
+                                    <p style={{ color: theme.textSecondary }}>
                                         The Mobile Application Security Verification Standard (MASVS) provides a baseline for testing
                                         mobile app security. Use this checklist to ensure your mobile applications meet security best practices.
                                     </p>
                                     <div style={{ marginTop: '16px', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                                        <a href="https://mas.owasp.org/" target="_blank" rel="noopener noreferrer" className="btn btn-secondary" style={{ fontSize: '14px', padding: '8px 16px' }}>
+                                        <a href="https://mas.owasp.org/" target="_blank" rel="noopener noreferrer" style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '8px',
+                                            padding: '8px 16px',
+                                            background: theme.bgCard,
+                                            border: `1px solid ${theme.border}`,
+                                            borderRadius: '8px',
+                                            color: theme.text,
+                                            textDecoration: 'none',
+                                            fontSize: '14px'
+                                        }}>
                                             <ExternalLink size={16} /> MASVS Documentation
                                         </a>
-                                        <a href="https://github.com/OWASP/owasp-mstg" target="_blank" rel="noopener noreferrer" className="btn btn-secondary" style={{ fontSize: '14px', padding: '8px 16px' }}>
+                                        <a href="https://github.com/OWASP/owasp-mstg" target="_blank" rel="noopener noreferrer" style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '8px',
+                                            padding: '8px 16px',
+                                            background: theme.bgCard,
+                                            border: `1px solid ${theme.border}`,
+                                            borderRadius: '8px',
+                                            color: theme.text,
+                                            textDecoration: 'none',
+                                            fontSize: '14px'
+                                        }}>
                                             <Download size={16} /> MSTG Guide
                                         </a>
                                     </div>
@@ -226,7 +362,7 @@ const MobileAppTesting = () => {
                         </div>
 
                         {/* Security Checks */}
-                        <h2 style={{ marginBottom: '20px', fontSize: '20px', fontWeight: 600 }}>
+                        <h2 style={{ marginBottom: '20px', fontSize: '20px', fontWeight: 600, color: theme.text }}>
                             Security Checks ({mobileChecks[activeTab]?.length || 0})
                         </h2>
 
@@ -234,16 +370,22 @@ const MobileAppTesting = () => {
                             {mobileChecks[activeTab]?.map((check) => (
                                 <div
                                     key={check.id}
-                                    className="card mobile-check-card"
                                     style={{
+                                        background: theme.bgCard,
+                                        border: `1px solid ${theme.border}`,
                                         borderLeft: `4px solid ${getSeverityColor(check.severity)}`,
-                                        cursor: 'pointer'
+                                        borderRadius: '12px',
+                                        padding: '20px',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s'
                                     }}
                                     onClick={() => setExpandedCheck(expandedCheck === check.id ? null : check.id)}
+                                    onMouseEnter={(e) => e.currentTarget.style.background = theme.bgCardHover}
+                                    onMouseLeave={(e) => e.currentTarget.style.background = theme.bgCard}
                                 >
                                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
                                         <div style={{
-                                            color: 'var(--primary-color)',
+                                            color: '#6366f1',
                                             padding: '8px',
                                             background: 'rgba(99, 102, 241, 0.1)',
                                             borderRadius: '8px'
@@ -260,21 +402,21 @@ const MobileAppTesting = () => {
                                                 }}>
                                                     {check.severity}
                                                 </span>
-                                                <span style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>
+                                                <span style={{ color: theme.textSecondary, fontSize: '12px' }}>
                                                     {check.id}
                                                 </span>
                                             </div>
-                                            <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '4px' }}>
+                                            <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '4px', color: theme.text }}>
                                                 {check.title}
                                             </h3>
-                                            <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
+                                            <p style={{ color: theme.textSecondary, fontSize: '14px' }}>
                                                 {check.description}
                                             </p>
                                         </div>
                                         <ChevronRight
                                             size={20}
                                             style={{
-                                                color: 'var(--text-secondary)',
+                                                color: theme.textSecondary,
                                                 transform: expandedCheck === check.id ? 'rotate(90deg)' : 'rotate(0)',
                                                 transition: 'transform 0.2s'
                                             }}
@@ -282,29 +424,29 @@ const MobileAppTesting = () => {
                                     </div>
 
                                     {expandedCheck === check.id && (
-                                        <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid var(--border-color)' }}>
+                                        <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: `1px solid ${theme.border}` }}>
                                             <div style={{ marginBottom: '16px' }}>
-                                                <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    <AlertTriangle size={16} style={{ color: 'var(--warning-color)' }} />
+                                                <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px', color: theme.text }}>
+                                                    <AlertTriangle size={16} style={{ color: '#f59e0b' }} />
                                                     Risk
                                                 </h4>
-                                                <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+                                                <p style={{ fontSize: '14px', color: theme.textSecondary, lineHeight: '1.6' }}>
                                                     {check.risk}
                                                 </p>
                                             </div>
 
                                             <div style={{ marginBottom: '16px' }}>
-                                                <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>
+                                                <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px', color: theme.text }}>
                                                     Detection Keywords
                                                 </h4>
                                                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                                                     {check.detection?.map((keyword, idx) => (
                                                         <code key={idx} style={{
-                                                            background: 'var(--bg-secondary)',
+                                                            background: theme.codeBg,
                                                             padding: '4px 8px',
                                                             borderRadius: '4px',
                                                             fontSize: '12px',
-                                                            color: 'var(--primary-color)'
+                                                            color: '#6366f1'
                                                         }}>
                                                             {keyword}
                                                         </code>
@@ -318,26 +460,26 @@ const MobileAppTesting = () => {
                                                 padding: '16px',
                                                 border: '1px solid rgba(16, 185, 129, 0.3)'
                                             }}>
-                                                <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--secondary-color)' }}>
+                                                <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px', color: '#22c55e' }}>
                                                     <Shield size={16} /> Remediation
                                                 </h4>
-                                                <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+                                                <p style={{ fontSize: '14px', color: theme.textSecondary, lineHeight: '1.6' }}>
                                                     {check.remediation}
                                                 </p>
                                             </div>
 
                                             <div style={{ marginTop: '16px' }}>
-                                                <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>
+                                                <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px', color: theme.text }}>
                                                     References
                                                 </h4>
                                                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                                                     {check.references?.map((ref, idx) => (
                                                         <span key={idx} style={{
-                                                            background: 'var(--bg-secondary)',
+                                                            background: theme.codeBg,
                                                             padding: '4px 8px',
                                                             borderRadius: '4px',
                                                             fontSize: '12px',
-                                                            color: 'var(--text-secondary)'
+                                                            color: theme.textSecondary
                                                         }}>
                                                             {ref}
                                                         </span>
@@ -352,26 +494,41 @@ const MobileAppTesting = () => {
 
                         {/* Summary Stats */}
                         <div className="grid grid-4" style={{ marginTop: '40px' }}>
-                            <div className="card stat-card">
-                                <div className="stat-card-icon critical"><AlertTriangle size={24} /></div>
-                                <div className="stat-card-value">{mobileChecks[activeTab]?.filter(c => c.severity === 'critical').length || 0}</div>
-                                <div className="stat-card-label">Critical Checks</div>
-                            </div>
-                            <div className="card stat-card">
-                                <div className="stat-card-icon high"><AlertTriangle size={24} /></div>
-                                <div className="stat-card-value">{mobileChecks[activeTab]?.filter(c => c.severity === 'high').length || 0}</div>
-                                <div className="stat-card-label">High Priority</div>
-                            </div>
-                            <div className="card stat-card">
-                                <div className="stat-card-icon medium"><AlertTriangle size={24} /></div>
-                                <div className="stat-card-value">{mobileChecks[activeTab]?.filter(c => c.severity === 'medium').length || 0}</div>
-                                <div className="stat-card-label">Medium Priority</div>
-                            </div>
-                            <div className="card stat-card">
-                                <div className="stat-card-icon info"><FileText size={24} /></div>
-                                <div className="stat-card-value">{mobileChecks[activeTab]?.length || 0}</div>
-                                <div className="stat-card-label">Total Checks</div>
-                            </div>
+                            {[
+                                { key: 'critical', label: 'Critical Checks', icon: <AlertTriangle size={24} />, color: '#ef4444' },
+                                { key: 'high', label: 'High Priority', icon: <AlertTriangle size={24} />, color: '#f97316' },
+                                { key: 'medium', label: 'Medium Priority', icon: <AlertTriangle size={24} />, color: '#eab308' },
+                                { key: 'total', label: 'Total Checks', icon: <FileText size={24} />, color: '#6366f1' }
+                            ].map((stat) => (
+                                <div key={stat.key} style={{
+                                    background: theme.bgCard,
+                                    border: `1px solid ${theme.border}`,
+                                    borderRadius: '16px',
+                                    padding: '20px',
+                                    textAlign: 'center'
+                                }}>
+                                    <div style={{
+                                        width: '48px',
+                                        height: '48px',
+                                        margin: '0 auto 12px',
+                                        background: `${stat.color}20`,
+                                        borderRadius: '12px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        color: stat.color
+                                    }}>
+                                        {stat.icon}
+                                    </div>
+                                    <div style={{ fontSize: '28px', fontWeight: '700', color: theme.text }}>
+                                        {stat.key === 'total' 
+                                            ? (mobileChecks[activeTab]?.length || 0)
+                                            : (mobileChecks[activeTab]?.filter(c => c.severity === stat.key).length || 0)
+                                        }
+                                    </div>
+                                    <div style={{ fontSize: '13px', color: theme.textSecondary }}>{stat.label}</div>
+                                </div>
+                            ))}
                         </div>
                     </>
                 )}

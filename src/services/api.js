@@ -81,4 +81,20 @@ export const mobileApi = {
     getSecurityGuide: (platform) => api.get(`/mobile/guide/${platform}`)
 };
 
+// Admin API
+export const adminApi = {
+    getDashboardStats: () => api.get('/admin/dashboard'),
+    getUsers: (params) => api.get('/admin/users', { params }),
+    getUserById: (userId) => api.get(`/admin/users/${userId}`),
+    createUser: (userData) => api.post('/admin/users', userData),
+    updateUser: (userId, data) => api.put(`/admin/users/${userId}`, data),
+    deleteUser: (userId) => api.delete(`/admin/users/${userId}`),
+    getSubscriptions: (params) => api.get('/admin/subscriptions', { params }),
+    updateSubscription: (subId, data) => api.put(`/admin/subscriptions/${subId}`, data),
+    getTiers: () => api.get('/admin/tiers'),
+    updateTier: (tierId, data) => api.put(`/admin/tiers/${tierId}`, data),
+    getScans: (params) => api.get('/admin/scans', { params }),
+    deleteScan: (scanId) => api.delete(`/admin/scans/${scanId}`)
+};
+
 export default api;

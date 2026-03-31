@@ -2,12 +2,41 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
     Bot, Send, User, Sparkles, Shield, AlertTriangle,
     BookOpen, Lightbulb, Code, Search, ChevronRight,
-    RefreshCw, Copy, CheckCircle
+    RefreshCw, Copy, CheckCircle, Sun, Moon
 } from 'lucide-react';
 import { aiApi } from '../services/api';
 import ReactMarkdown from 'react-markdown';
+import { useTheme } from '../contexts/ThemeContext';
 
 const AIAssistant = () => {
+    const { isDark, toggleTheme } = useTheme();
+    
+    const theme = isDark ? {
+        bg: '#0f172a',
+        bgSecondary: 'rgba(255,255,255,0.05)',
+        bgCard: 'rgba(255,255,255,0.05)',
+        border: 'rgba(255,255,255,0.1)',
+        text: '#f1f5f9',
+        textSecondary: '#94a3b8',
+        textMuted: '#64748b',
+        inputBg: 'rgba(0,0,0,0.3)',
+        chatBg: '#1e293b',
+        userMsgBg: 'rgba(99, 102, 241, 0.15)',
+        userMsgBorder: 'rgba(99, 102, 241, 0.3)',
+    } : {
+        bg: '#f8fafc',
+        bgSecondary: 'rgba(0,0,0,0.03)',
+        bgCard: '#ffffff',
+        border: 'rgba(0,0,0,0.08)',
+        text: '#0f172a',
+        textSecondary: '#475569',
+        textMuted: '#94a3b8',
+        inputBg: '#f1f5f9',
+        chatBg: '#ffffff',
+        userMsgBg: 'rgba(99, 102, 241, 0.1)',
+        userMsgBorder: 'rgba(99, 102, 241, 0.2)',
+    };
+
     const [messages, setMessages] = useState([
         {
             id: 'welcome',
@@ -131,39 +160,54 @@ What would you like to learn about?`,
     };
 
     return (
-        <div style={{ display: 'flex', height: 'calc(100vh - 70px)' }}>
+        <div style={{ display: 'flex', height: 'calc(100vh - 70px)', background: theme.bg }}>
             {/* Sidebar */}
             <div style={{
                 width: '280px',
-                background: 'var(--card-bg)',
-                borderRight: '1px solid var(--border-color)',
+                background: theme.bgCard,
+                borderRight: `1px solid ${theme.border}`,
                 display: 'flex',
                 flexDirection: 'column'
             }}>
                 {/* Header */}
-                <div style={{ padding: '20px', borderBottom: '1px solid var(--border-color)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                        <div style={{
-                            width: '40px',
-                            height: '40px',
-                            background: 'linear-gradient(135deg, #F55036, #ff7a66)',
-                            borderRadius: '10px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                        }}>
-                            <Bot size={24} color="white" />
+                <div style={{ padding: '20px', borderBottom: `1px solid ${theme.border}` }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <div style={{
+                                width: '40px',
+                                height: '40px',
+                                background: 'linear-gradient(135deg, #F55036, #ff7a66)',
+                                borderRadius: '10px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}>
+                                <Bot size={24} color="white" />
+                            </div>
+                            <div>
+                                <h2 style={{ fontSize: '16px', fontWeight: 600, color: theme.text }}>AI Assistant</h2>
+                                <p style={{ fontSize: '12px', color: theme.textSecondary }}>Powered by Groq</p>
+                            </div>
                         </div>
-                        <div>
-                            <h2 style={{ fontSize: '16px', fontWeight: 600 }}>AI Assistant</h2>
-                            <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Powered by Groq</p>
-                        </div>
+                        <button
+                            onClick={toggleTheme}
+                            style={{
+                                background: theme.bgSecondary,
+                                border: `1px solid ${theme.border}`,
+                                borderRadius: '8px',
+                                padding: '8px',
+                                cursor: 'pointer',
+                                display: 'flex'
+                            }}
+                        >
+                            {isDark ? <Sun size={16} style={{ color: '#fbbf24' }} /> : <Moon size={16} style={{ color: '#6366f1' }} />}
+                        </button>
                     </div>
                 </div>
 
                 {/* Quick Actions */}
                 <div style={{ padding: '16px', flex: 1, overflow: 'auto' }}>
-                    <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '12px', textTransform: 'uppercase', fontWeight: 600 }}>
+                    <p style={{ fontSize: '12px', color: theme.textSecondary, marginBottom: '12px', textTransform: 'uppercase', fontWeight: 600 }}>
                         Quick Actions
                     </p>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -181,14 +225,14 @@ What would you like to learn about?`,
                                         background: 'rgba(99, 102, 241, 0.1)',
                                         border: '1px solid transparent',
                                         borderRadius: '8px',
-                                        color: 'var(--text-primary)',
+                                        color: theme.text,
                                         cursor: 'pointer',
                                         fontSize: '13px',
                                         textAlign: 'left',
                                         transition: 'all 0.2s'
                                     }}
                                     onMouseEnter={(e) => {
-                                        e.currentTarget.style.borderColor = 'var(--primary-color)';
+                                        e.currentTarget.style.borderColor = '#6366f1';
                                         e.currentTarget.style.background = 'rgba(99, 102, 241, 0.2)';
                                     }}
                                     onMouseLeave={(e) => {
@@ -196,7 +240,7 @@ What would you like to learn about?`,
                                         e.currentTarget.style.background = 'rgba(99, 102, 241, 0.1)';
                                     }}
                                 >
-                                    <Icon size={16} style={{ color: 'var(--primary-color)' }} />
+                                    <Icon size={16} style={{ color: '#6366f1' }} />
                                     {action.label}
                                     <ChevronRight size={14} style={{ marginLeft: 'auto', opacity: 0.5 }} />
                                 </button>
@@ -214,15 +258,15 @@ What would you like to learn about?`,
                             borderRadius: '8px'
                         }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                                <Lightbulb size={16} style={{ color: 'var(--warning-color)' }} />
-                                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--warning-color)' }}>
+                                <Lightbulb size={16} style={{ color: '#f59e0b' }} />
+                                <span style={{ fontSize: '12px', fontWeight: 600, color: '#f59e0b' }}>
                                     Daily Security Tip
                                 </span>
                             </div>
-                            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>
+                            <p style={{ fontSize: '13px', color: theme.textSecondary, margin: 0 }}>
                                 {dailyTip.tip}
                             </p>
-                            <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '8px', opacity: 0.7 }}>
+                            <p style={{ fontSize: '11px', color: theme.textSecondary, marginTop: '8px', opacity: 0.7 }}>
                                 Category: {dailyTip.category}
                             </p>
                         </div>
@@ -230,11 +274,23 @@ What would you like to learn about?`,
                 </div>
 
                 {/* Footer */}
-                <div style={{ padding: '16px', borderTop: '1px solid var(--border-color)' }}>
+                <div style={{ padding: '16px', borderTop: `1px solid ${theme.border}` }}>
                     <button
                         onClick={() => setMessages([messages[0]])}
-                        className="btn btn-secondary"
-                        style={{ width: '100%', fontSize: '13px' }}
+                        style={{
+                            width: '100%',
+                            padding: '10px 16px',
+                            background: theme.bgSecondary,
+                            border: `1px solid ${theme.border}`,
+                            borderRadius: '8px',
+                            color: theme.text,
+                            fontSize: '13px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '8px'
+                        }}
                     >
                         <RefreshCw size={14} />
                         New Conversation
@@ -243,7 +299,7 @@ What would you like to learn about?`,
             </div>
 
             {/* Chat Area */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--dark-bg)' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: theme.chatBg }}>
                 {/* Messages */}
                 <div style={{ flex: 1, overflow: 'auto', padding: '20px' }}>
                     {messages.map((message) => (
@@ -262,8 +318,8 @@ What would you like to learn about?`,
                                 height: '32px',
                                 borderRadius: '8px',
                                 background: message.role === 'assistant'
-                                    ? 'linear-gradient(135deg, var(--primary-color), var(--primary-hover))'
-                                    : 'var(--card-bg)',
+                                    ? 'linear-gradient(135deg, #6366f1, #8b5cf6)'
+                                    : theme.bgCard,
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
@@ -272,15 +328,15 @@ What would you like to learn about?`,
                                 {message.role === 'assistant' ? (
                                     <Bot size={18} color="white" />
                                 ) : (
-                                    <User size={18} style={{ color: 'var(--text-secondary)' }} />
+                                    <User size={18} style={{ color: theme.textSecondary }} />
                                 )}
                             </div>
 
                             {/* Content */}
                             <div style={{ flex: 1, maxWidth: 'calc(100% - 60px)' }}>
                                 <div style={{
-                                    background: message.role === 'assistant' ? 'var(--card-bg)' : 'rgba(99, 102, 241, 0.1)',
-                                    border: `1px solid ${message.role === 'assistant' ? 'var(--border-color)' : 'rgba(99, 102, 241, 0.3)'}`,
+                                    background: message.role === 'assistant' ? theme.bgCard : theme.userMsgBg,
+                                    border: `1px solid ${message.role === 'assistant' ? theme.border : theme.userMsgBorder}`,
                                     borderRadius: '12px',
                                     padding: '16px',
                                     position: 'relative'
@@ -301,9 +357,9 @@ What would you like to learn about?`,
                                         }}
                                     >
                                         {copiedId === message.id ? (
-                                            <CheckCircle size={14} style={{ color: 'var(--secondary-color)' }} />
+                                            <CheckCircle size={14} style={{ color: '#22c55e' }} />
                                         ) : (
-                                            <Copy size={14} style={{ color: 'var(--text-secondary)' }} />
+                                            <Copy size={14} style={{ color: theme.textSecondary }} />
                                         )}
                                     </button>
 
@@ -311,7 +367,7 @@ What would you like to learn about?`,
                                     <div style={{
                                         fontSize: '14px',
                                         lineHeight: '1.6',
-                                        color: 'var(--text-primary)'
+                                        color: theme.text
                                     }}>
                                         <ReactMarkdown>{message.content}</ReactMarkdown>
                                     </div>
@@ -324,7 +380,7 @@ What would you like to learn about?`,
                                             background: 'rgba(245, 158, 11, 0.1)',
                                             borderRadius: '6px',
                                             fontSize: '12px',
-                                            color: 'var(--warning-color)'
+                                            color: '#f59e0b'
                                         }}>
                                             <Sparkles size={12} style={{ display: 'inline', marginRight: '6px' }} />
                                             Running in demo mode (Groq API key not configured)
@@ -333,7 +389,7 @@ What would you like to learn about?`,
                                 </div>
                                 <p style={{
                                     fontSize: '11px',
-                                    color: 'var(--text-secondary)',
+                                    color: theme.textSecondary,
                                     marginTop: '4px',
                                     marginLeft: '4px'
                                 }}>
@@ -349,7 +405,7 @@ What would you like to learn about?`,
                                 width: '32px',
                                 height: '32px',
                                 borderRadius: '8px',
-                                background: 'linear-gradient(135deg, var(--primary-color), var(--primary-hover))',
+                                background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center'
@@ -357,9 +413,9 @@ What would you like to learn about?`,
                                 <Bot size={18} color="white" />
                             </div>
                             <div style={{ display: 'flex', gap: '4px' }}>
-                                <span style={{ width: '8px', height: '8px', background: 'var(--primary-color)', borderRadius: '50%', animation: 'bounce 1s infinite' }}></span>
-                                <span style={{ width: '8px', height: '8px', background: 'var(--primary-color)', borderRadius: '50%', animation: 'bounce 1s infinite 0.1s' }}></span>
-                                <span style={{ width: '8px', height: '8px', background: 'var(--primary-color)', borderRadius: '50%', animation: 'bounce 1s infinite 0.2s' }}></span>
+                                <span style={{ width: '8px', height: '8px', background: '#6366f1', borderRadius: '50%', animation: 'bounce 1s infinite' }}></span>
+                                <span style={{ width: '8px', height: '8px', background: '#6366f1', borderRadius: '50%', animation: 'bounce 1s infinite 0.1s' }}></span>
+                                <span style={{ width: '8px', height: '8px', background: '#6366f1', borderRadius: '50%', animation: 'bounce 1s infinite 0.2s' }}></span>
                             </div>
                         </div>
                     )}
@@ -369,8 +425,8 @@ What would you like to learn about?`,
                 {/* Input Area */}
                 <div style={{
                     padding: '20px',
-                    borderTop: '1px solid var(--border-color)',
-                    background: 'var(--card-bg)'
+                    borderTop: `1px solid ${theme.border}`,
+                    background: theme.bgCard
                 }}>
                     <div style={{ display: 'flex', gap: '12px' }}>
                         <textarea
@@ -381,14 +437,15 @@ What would you like to learn about?`,
                             style={{
                                 flex: 1,
                                 padding: '12px 16px',
-                                background: 'var(--dark-bg)',
-                                border: '1px solid var(--border-color)',
+                                background: theme.inputBg,
+                                border: `1px solid ${theme.border}`,
                                 borderRadius: '8px',
-                                color: 'var(--text-primary)',
+                                color: theme.text,
                                 fontSize: '14px',
                                 resize: 'none',
                                 minHeight: '50px',
-                                maxHeight: '150px'
+                                maxHeight: '150px',
+                                outline: 'none'
                             }}
                             rows={1}
                         />
@@ -397,7 +454,7 @@ What would you like to learn about?`,
                             disabled={isLoading || !input.trim()}
                             style={{
                                 padding: '12px 20px',
-                                background: !input.trim() ? 'var(--border-color)' : 'linear-gradient(135deg, var(--primary-color), var(--primary-hover))',
+                                background: !input.trim() ? theme.border : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
                                 border: 'none',
                                 borderRadius: '8px',
                                 color: 'white',
@@ -414,7 +471,7 @@ What would you like to learn about?`,
                     </div>
                     <p style={{
                         fontSize: '12px',
-                        color: 'var(--text-secondary)',
+                        color: theme.textSecondary,
                         marginTop: '8px',
                         textAlign: 'center'
                     }}>

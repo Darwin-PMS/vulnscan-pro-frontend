@@ -13,10 +13,12 @@ import {
     Github, Twitter, Linkedin, Sparkle, Rocket, Shield2, User, LogOut
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 const LandingPage = () => {
     const navigate = useNavigate();
     const { isAuthenticated, user, logout } = useAuth();
+    const { isDark, toggleTheme } = useTheme();
     const [isScanning, setIsScanning] = useState(false);
     const [scanProgress, setScanProgress] = useState(0);
     const [url, setUrl] = useState('');
@@ -235,6 +237,17 @@ const LandingPage = () => {
                                 <Link to="/register" className="btn-light-primary">Get Started Free</Link>
                             </>
                         )}
+                        <button onClick={toggleTheme} style={{
+                            padding: '8px',
+                            background: 'transparent',
+                            border: 'none',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}>
+                            {isDark ? <Sun size={20} style={{ color: '#fbbf24' }} /> : <Moon size={20} style={{ color: '#6366f1' }} />}
+                        </button>
                     </div>
 
                     <button className="mobile-menu-btn-light" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
