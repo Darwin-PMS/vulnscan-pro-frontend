@@ -11,7 +11,7 @@ import {
     Filter, Search, Calendar, MapPin, Monitor, Smartphone,
     Key, ShieldCheck, AlertOctagon, EyeOff, History, Settings
 } from 'lucide-react';
-import api from '../../services/api';
+import api from '../services/api';
 
 const EnterpriseDashboard = () => {
     const [activeTab, setActiveTab] = useState('overview');
@@ -767,7 +767,7 @@ const IncidentTable = ({ incidents, onEscalate, theme }) => (
                                 <SeverityBadge severity={incident.severity} theme={theme} />
                             </td>
                             <td style={{ padding: '12px 16px' }}>
-                                <StatusBadge status={incident.status} theme={theme} />
+                                <IncidentStatusBadge status={incident.status} theme={theme} />
                             </td>
                             <td style={{ padding: '12px 16px', color: theme.muted, fontSize: '13px' }}>
                                 {new Date(incident.created_at).toLocaleDateString()}
@@ -788,7 +788,7 @@ const IncidentTable = ({ incidents, onEscalate, theme }) => (
     </div>
 );
 
-const StatusBadge = ({ status, theme }) => {
+const IncidentStatusBadge = ({ status, theme }) => {
     const colors = { open: '#ef4444', investigating: '#f59e0b', resolved: '#10b981', closed: '#94a3b8' };
     return (
         <span style={{ padding: '4px 8px', background: `${colors[status] || '#94a3b8'}20`, color: colors[status] || '#94a3b8', borderRadius: '4px', fontSize: '11px', fontWeight: '500' }}>

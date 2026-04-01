@@ -5,7 +5,7 @@ import {
     Download, Copy, ExternalLink, Filter, BarChart2, Zap, Code,
     Cloud, GitBranch, Server, Database as DB, Smartphone, Bot, Box
 } from 'lucide-react';
-import api from '../../services/api';
+import api from '../services/api';
 
 const ScanModules = () => {
     const [activeTab, setActiveTab] = useState('owasp');

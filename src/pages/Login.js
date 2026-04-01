@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { Lock, User, AlertCircle, Terminal, Shield, Sun, Moon, Sparkles } from 'lucide-react';
+import { Lock, User, AlertCircle, Terminal, Shield, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -53,8 +53,8 @@ const Login = () => {
     };
 
     return (
-        <div style={{ 
-            minHeight: '100vh', 
+        <div style={{
+            minHeight: '100vh',
             background: theme.bg,
             display: 'flex',
             alignItems: 'center',

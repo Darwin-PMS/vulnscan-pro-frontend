@@ -4,7 +4,7 @@ import {
     Users, CreditCard, Scan, Activity, 
     Plus, Edit, Trash2, Search, ChevronLeft, ChevronRight,
     UserCheck, UserX, Crown, AlertCircle, CheckCircle, XCircle, Sun, Moon,
-    ChevronDown, Loader2, Users2, CreditCard2, FileSearch2, Building2, Shield, BarChart3
+    ChevronDown, Loader2, Users2, FileSearch2, Building2, Shield, BarChart3
 } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -720,7 +720,7 @@ const SubscriptionsManagement = ({ theme, toast }) => {
                             ) : subscriptions.length === 0 ? (
                                 <tr>
                                     <td colSpan={8} style={{ textAlign: 'center', padding: '48px', color: theme.textSecondary }}>
-                                        <CreditCard2 size={48} style={{ opacity: 0.3, marginBottom: '8px' }} />
+                                        <CreditCard size={48} style={{ opacity: 0.3, marginBottom: '8px' }} />
                                         <p>No subscriptions found</p>
                                     </td>
                                 </tr>
