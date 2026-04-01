@@ -97,4 +97,95 @@ export const adminApi = {
     deleteScan: (scanId) => api.delete(`/admin/scans/${scanId}`)
 };
 
+// Enterprise API
+export const enterpriseApi = {
+    // NIST CSF
+    getCompliance: () => api.get('/enterprise/nist/compliance'),
+    getIdentify: () => api.get('/enterprise/nist/identify'),
+    getProtect: () => api.get('/enterprise/nist/protect'),
+    getDetect: (params) => api.get('/enterprise/nist/detect', { params }),
+    getRiskRegister: () => api.get('/enterprise/nist/risk-register'),
+    
+    // Incidents
+    getIncidents: (params) => api.get('/enterprise/incidents', { params }),
+    createIncident: (data) => api.post('/enterprise/incidents', data),
+    escalateIncident: (ticketId, data) => api.put(`/enterprise/incidents/${ticketId}/escalate`, data),
+    
+    // Audit
+    getAuditLogs: (params) => api.get('/enterprise/audit/logs', { params }),
+    searchAuditLogs: (params) => api.get('/enterprise/audit/search', { params }),
+    getSecurityEvents: (params) => api.get('/enterprise/audit/security-events', { params }),
+    getAnomalies: () => api.get('/enterprise/audit/anomalies'),
+    getComplianceReport: (params) => api.get('/enterprise/audit/compliance-report', { params }),
+    
+    // MFA
+    setupMFA: (method) => api.post('/enterprise/mfa/setup', { method }),
+    verifyMFA: (code) => api.post('/enterprise/mfa/verify', { code }),
+    getMFAStatus: () => api.get('/enterprise/mfa/status'),
+    disableMFA: (code) => api.post('/enterprise/mfa/disable', { code }),
+    
+    // RBAC
+    getPermissions: () => api.get('/enterprise/rbac/permissions'),
+    getRoles: () => api.get('/enterprise/rbac/roles'),
+    assignRole: (userId, role) => api.put(`/enterprise/rbac/users/${userId}/role`, { role }),
+    getRoleAudit: (params) => api.get('/enterprise/rbac/audit', { params }),
+    
+    // Privacy
+    getConsents: () => api.get('/enterprise/privacy/consents'),
+    createConsent: (data) => api.post('/enterprise/privacy/consent', data),
+    withdrawConsent: (type) => api.delete(`/enterprise/privacy/consent/${type}`),
+    exportData: () => api.post('/enterprise/privacy/export'),
+    deleteData: (data) => api.post('/enterprise/privacy/delete', data),
+    
+    // Zero Trust
+    calculateSessionTrust: (data) => api.post('/enterprise/zero-trust/session-trust', data),
+    registerDevice: (data) => api.post('/enterprise/zero-trust/device', data),
+    
+    // AI Governance
+    validatePrompt: (prompt) => api.post('/enterprise/ai/validate', { prompt }),
+    calculateTrustScore: (data) => api.post('/enterprise/ai/trust-score', data),
+    getAIAnalytics: (range) => api.get('/enterprise/ai/usage-analytics', { params: { range } }),
+    
+    // Stats
+    getStats: () => api.get('/enterprise/stats'),
+    getAlerts: () => api.get('/enterprise/alerts')
+};
+
+// Enterprise Dashboard API
+export const enterpriseDashboardApi = {
+    getOverview: () => api.get('/enterprise/stats'),
+    getNISTCompliance: () => api.get('/enterprise/nist/compliance'),
+    getAlerts: () => api.get('/enterprise/alerts'),
+    getIncidents: (params) => api.get('/enterprise/incidents', { params }),
+    getAuditLogs: (params) => api.get('/enterprise/audit/logs', { params }),
+    getSecurityEvents: () => api.get('/enterprise/audit/security-events'),
+    getAnomalies: () => api.get('/enterprise/audit/anomalies')
+};
+
+// Scan Modules API (OWASP, GHDB, API, Cloud, CI/CD, Mobile, LLM, Container)
+export const scanModulesApi = {
+    getModules: () => api.get('/scan-modules/modules'),
+    getOWASPCategories: () => api.get('/scan-modules/modules/owasp/categories'),
+    getGHDBPatterns: () => api.get('/scan-modules/modules/ghdb/categories'),
+    getAPICategories: () => api.get('/scan-modules/modules/api/categories'),
+    getCloudCategories: () => api.get('/scan-modules/modules/cloud/categories'),
+    getCICDSCategories: () => api.get('/scan-modules/modules/cicd/categories'),
+    getMobileCategories: () => api.get('/scan-modules/modules/mobile/categories'),
+    getLLMCategories: () => api.get('/scan-modules/modules/llm/categories'),
+    getContainerCategories: () => api.get('/scan-modules/modules/container/categories'),
+    runScan: (url, module) => api.post('/scan-modules/modules/scan', { url, module }),
+    runOWASPScan: (url) => api.post('/scan-modules/modules/owasp/scan', { url }),
+    runGHDBPScan: (url) => api.post('/scan-modules/modules/ghdb/scan', { url }),
+    runAPIScan: (url) => api.post('/scan-modules/modules/api/scan', { url }),
+    runCloudScan: (url) => api.post('/scan-modules/modules/cloud/scan', { url }),
+    runCICDPScan: (url) => api.post('/scan-modules/modules/cicd/scan', { url }),
+    runMobileScan: (data) => api.post('/scan-modules/modules/mobile/scan', data),
+    runLLMScan: (data) => api.post('/scan-modules/modules/llm/scan', data),
+    runLLMValidate: (data) => api.post('/scan-modules/modules/llm/validate', data),
+    runContainerScan: (data) => api.post('/scan-modules/modules/container/scan', data),
+    runMultiScan: (url, modules) => api.post('/scan-modules/modules/multi-scan', { url, modules }),
+    getScans: (params) => api.get('/scan-modules/modules/scans', { params }),
+    getScanById: (scanId) => api.get(`/scan-modules/modules/scan/${scanId}`)
+};
+
 export default api;

@@ -1,366 +1,367 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-    Scan, Bug, Shield, Activity, Zap, Crown, User, ArrowRight, 
-    TrendingUp, Clock, Target, CheckCircle, XCircle, Sun, Moon,
-    RefreshCw, AlertOctagon, AlertTriangle, AlertCircle, ArrowUpRight
+import {
+    Shield, ScanLine, AlertTriangle, CheckCircle, TrendingUp, 
+    Activity, Eye, Bell, FileText, Clock, Globe, Users,
+    Database, Lock, Key, Download, Play, Pause, RefreshCw,
+    ChevronRight, Zap, Server, Code, Cloud, GitBranch, Smartphone, Bot, Box
 } from 'lucide-react';
-import { scanApi } from '../services/api';
+import api from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../contexts/ThemeContext';
-import StatusBadge from '../components/StatusBadge';
-import { formatDistanceToNow, format } from 'date-fns';
 
 const Dashboard = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
-    const { isDark, toggleTheme } = useTheme();
     const [stats, setStats] = useState(null);
+    const [recentScans, setRecentScans] = useState([]);
+    const [topVulnerabilities, setTopVulnerabilities] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const [scanModules, setScanModules] = useState([]);
+    const [quickScanUrl, setQuickScanUrl] = useState('');
+    const [scanning, setScanning] = useState(false);
 
     useEffect(() => {
-        fetchStats();
+        fetchDashboardData();
     }, []);
 
-    useEffect(() => {
-        const handleFocus = () => fetchStats();
-        window.addEventListener('focus', handleFocus);
-        return () => window.removeEventListener('focus', handleFocus);
-    }, []);
-
-    const fetchStats = async () => {
+    const fetchDashboardData = async () => {
+        setLoading(true);
         try {
-            const response = await scanApi.getDashboardStats();
-            setStats(response.data);
-        } catch (err) {
-            console.error('Error fetching stats:', err);
+            const [statsRes, scansRes, modulesRes] = await Promise.all([
+                api.get('/api/scans/stats/dashboard'),
+                api.get('/api/scans?limit=5'),
+                api.get('/api/scan-modules/modules').catch(() => ({ data: { modules: {} } }))
+            ]);
+            
+            setStats(statsRes.data);
+            setRecentScans(scansRes.data.scans || []);
+            setScanModules(modulesRes.data.modules || {});
+        } catch (error) {
+            console.error('Failed to fetch dashboard data:', error);
         } finally {
             setLoading(false);
         }
     };
 
-    const getSeverityCount = (severity) => {
-        if (!stats?.severityBreakdown) return 0;
-        const item = stats.severityBreakdown.find(s => s.severity === severity);
-        return item?.count || 0;
+    const handleQuickScan = async (e) => {
+        e.preventDefault();
+        if (!quickScanUrl) return;
+        
+        setScanning(true);
+        try {
+            const res = await api.post('/api/scans/start', { url: quickScanUrl });
+            navigate(`/scan/${res.data.scanId}`);
+        } catch (error) {
+            console.error('Scan failed:', error);
+            alert('Scan failed. Please try again.');
+        } finally {
+            setScanning(false);
+        }
     };
 
-    const theme = isDark ? {
-        bg: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-        bgSecondary: 'rgba(255,255,255,0.05)',
-        bgCard: 'rgba(255,255,255,0.05)',
-        bgCardHover: 'rgba(255,255,255,0.08)',
-        border: 'rgba(255,255,255,0.1)',
-        text: '#f1f5f9',
-        textSecondary: '#94a3b8',
-        textMuted: '#64748b',
-    } : {
-        bg: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-        bgSecondary: 'rgba(0,0,0,0.03)',
-        bgCard: '#ffffff',
-        bgCardHover: '#f8fafc',
-        border: 'rgba(0,0,0,0.08)',
-        text: '#0f172a',
-        textSecondary: '#475569',
-        textMuted: '#94a3b8',
+    const moduleIcons = {
+        owasp: Shield,
+        ghdb: Database,
+        api: Code,
+        cloud: Cloud,
+        cicd: GitBranch,
+        mobile: Smartphone,
+        llm: Bot,
+        container: Box
+    };
+
+    const moduleColors = {
+        owasp: '#6366f1',
+        ghdb: '#10b981',
+        api: '#f59e0b',
+        cloud: '#3b82f6',
+        cicd: '#ec4899',
+        mobile: '#8b5cf6',
+        llm: '#06b6d4',
+        container: '#14b8a6'
     };
 
     if (loading) {
         return (
-            <div style={{ ...styles.pageContainer, background: theme.bg }}>
-                <div style={styles.loadingSpinner}></div>
-                <p style={{ ...styles.loadingText, color: theme.text }}>Loading dashboard...</p>
+            <div className="dashboard-loading">
+                <RefreshCw className="animate-spin" size={32} style={{ color: '#6366f1' }} />
+                <p>Loading dashboard...</p>
             </div>
         );
     }
 
     return (
-        <div style={{ ...styles.pageContainer, background: theme.bg }}>
-            {/* Header */}
-            <header style={{ ...styles.header, borderBottom: `1px solid ${theme.border}` }}>
-                <div style={styles.headerContent}>
-                    <div>
-                        <h1 style={{ ...styles.title, color: theme.text }}>
-                            Welcome back, <span style={{ color: '#6366f1' }}>{user?.username || 'User'}</span>
-                        </h1>
-                        <p style={{ ...styles.subtitle, color: theme.textSecondary }}>
-                            <User size={14} style={{ display: 'inline', marginRight: '6px' }} />
-                            {user?.email}
-                        </p>
-                    </div>
-                    <div style={styles.headerActions}>
-                        <button 
-                            style={{ ...styles.themeToggle, background: theme.bgCard, border: `1px solid ${theme.border}` }} 
-                            onClick={toggleTheme}
-                        >
-                            {isDark ? <Sun size={18} style={{ color: '#fbbf24' }} /> : <Moon size={18} style={{ color: '#6366f1' }} />}
-                        </button>
-                        <button 
-                            style={{ ...styles.refreshBtn, background: theme.bgCard, border: `1px solid ${theme.border}`, color: theme.text }} 
-                            onClick={fetchStats}
-                        >
-                            <RefreshCw size={18} />
-                        </button>
-                        <button style={styles.newScanBtn} onClick={() => navigate('/scan')}>
-                            <Scan size={18} />
-                            New Scan
-                        </button>
-                    </div>
+        <div className="dashboard">
+            <div className="dashboard-header">
+                <div>
+                    <h1>Welcome back, {user?.username || 'User'}</h1>
+                    <p>Here is your security overview</p>
                 </div>
-            </header>
+                <button className="btn btn-primary" onClick={() => navigate('/scan')}>
+                    <ScanLine size={18} /> New Scan
+                </button>
+            </div>
 
-            <main style={styles.main}>
-                {/* Quick Stats */}
-                <div style={styles.statsGrid}>
-                    <div style={{ ...styles.statCard, background: theme.bgCard, border: `1px solid ${theme.border}` }}>
-                        <div style={styles.statCardHeader}>
-                            <div style={{ ...styles.statIcon, background: 'rgba(99, 102, 241, 0.15)' }}>
-                                <Scan size={24} style={{ color: '#6366f1' }} />
+            <div className="stats-grid">
+                <StatCard
+                    title="Total Scans"
+                    value={stats?.totalScans || 0}
+                    icon={ScanLine}
+                    color="#6366f1"
+                    trend="+12%"
+                    positive
+                />
+                <StatCard
+                    title="Vulnerabilities"
+                    value={stats?.totalVulnerabilities || 0}
+                    icon={AlertTriangle}
+                    color="#ef4444"
+                    trend="-5%"
+                    positive={false}
+                />
+                <StatCard
+                    title="Resolved"
+                    value={stats?.resolvedVulnerabilities || 0}
+                    icon={CheckCircle}
+                    color="#10b981"
+                    trend="+8%"
+                    positive
+                />
+                <StatCard
+                    title="Security Score"
+                    value={`${stats?.securityScore || 0}%`}
+                    icon={Shield}
+                    color="#f59e0b"
+                    trend="+3%"
+                    positive
+                />
+            </div>
+
+            <div className="dashboard-grid">
+                <div className="dashboard-main">
+                    <div className="card quick-scan-card">
+                        <h3><Zap size={18} /> Quick Scan</h3>
+                        <form onSubmit={handleQuickScan}>
+                            <div className="quick-scan-form">
+                                <input
+                                    type="url"
+                                    placeholder="https://example.com"
+                                    value={quickScanUrl}
+                                    onChange={(e) => setQuickScanUrl(e.target.value)}
+                                    required
+                                />
+                                <button type="submit" className="btn btn-primary" disabled={scanning}>
+                                    {scanning ? <RefreshCw className="animate-spin" size={18} /> : <Play size={18} />}
+                                    {scanning ? 'Scanning...' : 'Scan'}
+                                </button>
                             </div>
-                            <span style={{ ...styles.statTrend, color: '#22c55e' }}>
-                                <TrendingUp size={14} /> Active
-                            </span>
-                        </div>
-                        <span style={{ ...styles.statValue, color: theme.text }}>{stats?.totalScans || 0}</span>
-                        <span style={{ ...styles.statLabel, color: theme.textSecondary }}>Total Scans</span>
+                        </form>
                     </div>
 
-                    <div style={{ ...styles.statCard, background: theme.bgCard, border: `1px solid ${theme.border}` }}>
-                        <div style={styles.statCardHeader}>
-                            <div style={{ ...styles.statIcon, background: 'rgba(239, 68, 68, 0.15)' }}>
-                                <Bug size={24} style={{ color: '#dc2626' }} />
-                            </div>
-                        </div>
-                        <span style={{ ...styles.statValue, color: theme.text }}>{stats?.totalVulnerabilities || 0}</span>
-                        <span style={{ ...styles.statLabel, color: theme.textSecondary }}>Vulnerabilities Found</span>
-                    </div>
-
-                    <div style={{ ...styles.statCard, background: theme.bgCard, border: `1px solid ${theme.border}` }}>
-                        <div style={styles.statCardHeader}>
-                            <div style={{ ...styles.statIcon, background: 'rgba(16, 185, 129, 0.15)' }}>
-                                <CheckCircle size={24} style={{ color: '#22c55e' }} />
-                            </div>
-                        </div>
-                        <span style={{ ...styles.statValue, color: theme.text }}>
-                            {stats?.recentScans?.filter(s => s.status === 'completed').length || 0}
-                        </span>
-                        <span style={{ ...styles.statLabel, color: theme.textSecondary }}>Completed</span>
-                    </div>
-
-                    <div style={{ ...styles.statCard, background: theme.bgCard, border: `1px solid ${theme.border}` }}>
-                        <div style={styles.statCardHeader}>
-                            <div style={{ ...styles.statIcon, background: 'rgba(249, 115, 22, 0.15)' }}>
-                                <Activity size={24} style={{ color: '#f97316' }} />
-                            </div>
-                        </div>
-                        <span style={{ ...styles.statValue, color: theme.text }}>
-                            {stats?.recentScans?.filter(s => s.status === 'running' || s.status === 'pending').length || 0}
-                        </span>
-                        <span style={{ ...styles.statLabel, color: theme.textSecondary }}>In Progress</span>
-                    </div>
-                </div>
-
-                {/* Severity Breakdown */}
-                <section style={{ marginBottom: '32px' }}>
-                    <h2 style={{ ...styles.sectionTitle, color: theme.text }}>
-                        <Shield size={20} style={{ color: '#6366f1' }} />
-                        Vulnerability Breakdown
-                    </h2>
-                    <div style={styles.severityGrid}>
-                        {[
-                            { key: 'critical', label: 'Critical', color: '#dc2626', count: getSeverityCount('critical'), icon: AlertOctagon },
-                            { key: 'high', label: 'High', color: '#f97316', count: getSeverityCount('high'), icon: AlertTriangle },
-                            { key: 'medium', label: 'Medium', color: '#eab308', count: getSeverityCount('medium'), icon: AlertCircle },
-                            { key: 'low', label: 'Low', color: '#22c55e', count: getSeverityCount('low'), icon: Shield },
-                        ].map((sev) => (
-                            <div 
-                                key={sev.key} 
-                                style={{ 
-                                    ...styles.severityCard, 
-                                    background: theme.bgCard, 
-                                    border: `1px solid ${theme.border}` 
-                                }}
-                            >
-                                <div style={{ ...styles.severityCardHeader }}>
-                                    <sev.icon size={20} style={{ color: sev.color }} />
-                                    <span style={{ color: sev.color }}>{sev.count}</span>
-                                </div>
-                                <div style={{ ...styles.severityBar, background: theme.border }}>
-                                    <div style={{ 
-                                        ...styles.severityBarFill, 
-                                        width: stats?.totalVulnerabilities ? `${(sev.count / stats.totalVulnerabilities) * 100}%` : '0%',
-                                        background: sev.color 
-                                    }}></div>
-                                </div>
-                                <span style={{ ...styles.severityLabel, color: theme.textSecondary }}>{sev.label}</span>
-                            </div>
-                        ))}
-                    </div>
-                </section>
-
-                {/* Recent Scans */}
-                <section style={{ marginBottom: '32px' }}>
-                    <div style={styles.sectionHeader}>
-                        <h2 style={{ ...styles.sectionTitle, color: theme.text }}>
-                            <Clock size={20} style={{ color: '#6366f1' }} />
-                            Recent Scans
-                        </h2>
-                        <button 
-                            style={{ ...styles.viewAllBtn, border: `1px solid ${theme.border}`, color: theme.textSecondary }}
-                            onClick={() => navigate('/scans')}
-                        >
-                            View All <ArrowUpRight size={16} />
-                        </button>
-                    </div>
-
-                    {stats?.recentScans?.length > 0 ? (
-                        <div style={styles.scansGrid}>
-                            {stats.recentScans.map((scan) => (
-                                <div
-                                    key={scan.scan_id}
-                                    style={{
-                                        ...styles.scanCard,
-                                        background: theme.bgCard,
-                                        border: `1px solid ${theme.border}`,
-                                    }}
-                                    onClick={() => navigate(`/scan/${scan.scan_id}`)}
-                                    onMouseEnter={(e) => e.currentTarget.style.background = theme.bgCardHover}
-                                    onMouseLeave={(e) => e.currentTarget.style.background = theme.bgCard}
-                                >
-                                    <div style={styles.scanCardHeader}>
-                                        <StatusBadge status={scan.status} />
-                                        <span style={{ ...styles.scanDate, color: theme.textMuted }}>
-                                            {formatDistanceToNow(new Date(scan.created_at), { addSuffix: true })}
-                                        </span>
-                                    </div>
-                                    <div style={styles.scanUrl}>
-                                        <Target size={14} style={{ color: theme.textMuted }} />
-                                        <span style={{ color: theme.text }}>{scan.target_url}</span>
-                                    </div>
-                                    <div style={styles.scanStats}>
-                                        <div style={styles.scanStat}>
-                                            <Bug size={14} style={{ color: '#dc2626' }} />
-                                            <span style={{ color: theme.text }}>{scan.vuln_count || 0}</span>
-                                            <span style={{ color: theme.textMuted }}>vulns</span>
-                                        </div>
-                                        <button style={{ ...styles.viewBtn, color: '#6366f1' }}>
-                                            View <ArrowRight size={14} />
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div style={{ ...styles.emptyState, background: theme.bgCard, border: `1px solid ${theme.border}` }}>
-                            <Scan size={64} style={{ color: theme.textMuted, marginBottom: '16px' }} />
-                            <h3 style={{ ...styles.emptyTitle, color: theme.text }}>No Scans Yet</h3>
-                            <p style={{ ...styles.emptyText, color: theme.textSecondary }}>
-                                Start your first vulnerability scan to see results here
-                            </p>
-                            <button style={styles.startBtn} onClick={() => navigate('/scan')}>
-                                <Zap size={18} />
-                                Start First Scan
+                    <div className="card scan-modules-card">
+                        <div className="card-header">
+                            <h3><Shield size={18} /> Security Scan Modules</h3>
+                            <button className="btn btn-secondary btn-sm" onClick={() => navigate('/scan-modules')}>
+                                View All
                             </button>
                         </div>
-                    )}
-                </section>
-
-                {/* Common Vulnerabilities */}
-                {stats?.commonVulnerabilities?.length > 0 && (
-                    <section>
-                        <h2 style={{ ...styles.sectionTitle, color: theme.text }}>
-                            <AlertOctagon size={20} style={{ color: '#6366f1' }} />
-                            Common Vulnerability Types
-                        </h2>
-                        <div style={{ ...styles.vulnList, background: theme.bgCard, border: `1px solid ${theme.border}` }}>
-                            {stats.commonVulnerabilities.map((vuln, index) => (
-                                <div 
-                                    key={index} 
-                                    style={{ 
-                                        ...styles.vulnItem, 
-                                        borderBottom: index < stats.commonVulnerabilities.length - 1 ? `1px solid ${theme.border}` : 'none' 
-                                    }}
-                                >
-                                    <span style={{ ...styles.vulnRank, color: '#6366f1' }}>#{index + 1}</span>
-                                    <span style={{ ...styles.vulnType, color: theme.text }}>{vuln.vulnerability_type}</span>
-                                    <span style={{ ...styles.vulnCount, color: theme.textSecondary }}>{vuln.count} occurrences</span>
-                                </div>
-                            ))}
+                        <div className="modules-grid">
+                            {Object.entries(scanModules).map(([id, module]) => {
+                                const Icon = moduleIcons[id] || Shield;
+                                const color = moduleColors[id] || '#6366f1';
+                                return (
+                                    <div 
+                                        key={id} 
+                                        className="module-item"
+                                        onClick={() => navigate('/scan-modules')}
+                                        style={{ borderColor: color }}
+                                    >
+                                        <div className="module-icon" style={{ background: `${color}20`, color }}>
+                                            <Icon size={24} />
+                                        </div>
+                                        <div className="module-info">
+                                            <h4>{module.name}</h4>
+                                            <p>{module.categories?.totalPatterns || 0} patterns</p>
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
-                    </section>
-                )}
-            </main>
+                    </div>
+
+                    <div className="card recent-scans-card">
+                        <div className="card-header">
+                            <h3><Clock size={18} /> Recent Scans</h3>
+                            <button className="btn btn-secondary btn-sm" onClick={() => navigate('/scans')}>
+                                View All
+                            </button>
+                        </div>
+                        {recentScans.length === 0 ? (
+                            <div className="empty-state">
+                                <ScanLine size={48} />
+                                <p>No scans yet. Start your first scan!</p>
+                                <button className="btn btn-primary" onClick={() => navigate('/scan')}>
+                                    Start Scan
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="scans-list">
+                                {recentScans.map((scan) => (
+                                    <div 
+                                        key={scan.id} 
+                                        className="scan-item"
+                                        onClick={() => navigate(`/scan/${scan.scan_id}`)}
+                                    >
+                                        <div className="scan-info">
+                                            <Globe size={16} />
+                                            <span className="scan-url">{scan.target_url}</span>
+                                        </div>
+                                        <div className="scan-meta">
+                                            <span className={`scan-status status-${scan.status}`}>
+                                                {scan.status}
+                                            </span>
+                                            <span className="scan-date">
+                                                {new Date(scan.created_at).toLocaleDateString()}
+                                            </span>
+                                        </div>
+                                        <div className="scan-vulns">
+                                            {scan.critical_count > 0 && (
+                                                <span className="vuln-badge critical">{scan.critical_count}</span>
+                                            )}
+                                            {scan.high_count > 0 && (
+                                                <span className="vuln-badge high">{scan.high_count}</span>
+                                            )}
+                                            {scan.medium_count > 0 && (
+                                                <span className="vuln-badge medium">{scan.medium_count}</span>
+                                            )}
+                                        </div>
+                                        <ChevronRight size={16} />
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                <div className="dashboard-sidebar">
+                    <div className="card security-overview-card">
+                        <h3><Activity size={18} /> Security Overview</h3>
+                        <div className="overview-stats">
+                            <div className="overview-stat">
+                                <span className="stat-label">Critical</span>
+                                <span className="stat-value critical">{stats?.criticalVulnerabilities || 0}</span>
+                            </div>
+                            <div className="overview-stat">
+                                <span className="stat-label">High</span>
+                                <span className="stat-value high">{stats?.highVulnerabilities || 0}</span>
+                            </div>
+                            <div className="overview-stat">
+                                <span className="stat-label">Medium</span>
+                                <span className="stat-value medium">{stats?.mediumVulnerabilities || 0}</span>
+                            </div>
+                            <div className="overview-stat">
+                                <span className="stat-label">Low</span>
+                                <span className="stat-value low">{stats?.lowVulnerabilities || 0}</span>
+                            </div>
+                        </div>
+                        <div className="overview-chart">
+                            <div 
+                                className="chart-bar" 
+                                style={{ 
+                                    height: `${Math.max(5, ((stats?.criticalVulnerabilities || 0) / Math.max(stats?.totalVulnerabilities || 1, 1)) * 100)}%`,
+                                    background: '#ef4444'
+                                }} 
+                            />
+                            <div 
+                                className="chart-bar" 
+                                style={{ 
+                                    height: `${Math.max(5, ((stats?.highVulnerabilities || 0) / Math.max(stats?.totalVulnerabilities || 1, 1)) * 100)}%`,
+                                    background: '#f97316'
+                                }} 
+                            />
+                            <div 
+                                className="chart-bar" 
+                                style={{ 
+                                    height: `${Math.max(5, ((stats?.mediumVulnerabilities || 0) / Math.max(stats?.totalVulnerabilities || 1, 1)) * 100)}%`,
+                                    background: '#f59e0b'
+                                }} 
+                            />
+                            <div 
+                                className="chart-bar" 
+                                style={{ 
+                                    height: `${Math.max(5, ((stats?.lowVulnerabilities || 0) / Math.max(stats?.totalVulnerabilities || 1, 1)) * 100)}%`,
+                                    background: '#3b82f6'
+                                }} 
+                            />
+                        </div>
+                    </div>
+
+                    <div className="card quick-links-card">
+                        <h3><Zap size={18} /> Quick Links</h3>
+                        <div className="quick-links">
+                            <button onClick={() => navigate('/scan-modules')}>
+                                <Shield size={18} /> Scan Modules
+                            </button>
+                            <button onClick={() => navigate('/dorks')}>
+                                <Database size={18} /> GHDB Patterns
+                            </button>
+                            <button onClick={() => navigate('/ai-assistant')}>
+                                <Bot size={18} /> AI Assistant
+                            </button>
+                            <button onClick={() => navigate('/mobile')}>
+                                <Smartphone size={18} /> Mobile Testing
+                            </button>
+                            {user?.role === 'admin' && (
+                                <>
+                                    <button onClick={() => navigate('/admin')}>
+                                        <Users size={18} /> Admin Panel
+                                    </button>
+                                    <button onClick={() => navigate('/enterprise')}>
+                                        <Lock size={18} /> Enterprise
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="card security-tips-card">
+                        <h3><CheckCircle size={18} /> Security Tips</h3>
+                        <div className="tips-list">
+                            <div className="tip">
+                                <CheckCircle size={14} color="#10b981" />
+                                <p>Enable MFA for enhanced account security</p>
+                            </div>
+                            <div className="tip">
+                                <CheckCircle size={14} color="#10b981" />
+                                <p>Regularly scan for new vulnerabilities</p>
+                            </div>
+                            <div className="tip">
+                                <CheckCircle size={14} color="#10b981" />
+                                <p>Review and resolve critical findings promptly</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };
 
-const styles = {
-    pageContainer: { minHeight: '100vh', color: '#f1f5f9' },
-    loadingSpinner: {
-        width: '48px', height: '48px',
-        border: '4px solid rgba(99, 102, 241, 0.2)',
-        borderTopColor: '#6366f1',
-        borderRadius: '50%',
-        animation: 'spin 1s linear infinite',
-        margin: '0 auto',
-        marginTop: '20vh'
-    },
-    loadingText: { fontSize: '18px', textAlign: 'center', marginTop: '16px' },
-    header: { padding: '24px 32px', background: 'rgba(0,0,0,0.2)', backdropFilter: 'blur(10px)' },
-    headerContent: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '1400px', margin: '0 auto' },
-    title: { fontSize: '28px', fontWeight: '700', margin: '0 0 4px 0' },
-    subtitle: { fontSize: '14px', margin: 0 },
-    headerActions: { display: 'flex', gap: '12px', alignItems: 'center' },
-    themeToggle: { padding: '10px', borderRadius: '10px', cursor: 'pointer', display: 'flex' },
-    refreshBtn: { padding: '10px', borderRadius: '10px', cursor: 'pointer', display: 'flex' },
-    newScanBtn: {
-        display: 'flex', alignItems: 'center', gap: '8px',
-        padding: '12px 20px',
-        background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-        border: 'none', borderRadius: '10px',
-        color: 'white', fontSize: '14px', fontWeight: '600', cursor: 'pointer'
-    },
-    main: { padding: '24px 32px', maxWidth: '1400px', margin: '0 auto' },
-    statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '32px' },
-    statCard: { padding: '20px', borderRadius: '16px' },
-    statCardHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' },
-    statIcon: { width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
-    statTrend: { display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', fontWeight: '500' },
-    statValue: { display: 'block', fontSize: '32px', fontWeight: '800', lineHeight: 1 },
-    statLabel: { display: 'block', fontSize: '13px', marginTop: '4px' },
-    sectionTitle: { fontSize: '18px', fontWeight: '600', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '10px' },
-    sectionHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' },
-    viewAllBtn: { display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', background: 'transparent', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: '500' },
-    severityGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px' },
-    severityCard: { padding: '20px', borderRadius: '12px' },
-    severityCardHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' },
-    severityBar: { height: '6px', borderRadius: '3px', overflow: 'hidden', marginBottom: '8px' },
-    severityBarFill: { height: '100%', borderRadius: '3px', transition: 'width 0.3s ease' },
-    severityLabel: { fontSize: '13px' },
-    scansGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' },
-    scanCard: { padding: '20px', borderRadius: '12px', cursor: 'pointer', transition: 'all 0.2s' },
-    scanCardHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' },
-    scanDate: { fontSize: '12px' },
-    scanUrl: { display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', marginBottom: '12px' },
-    scanStats: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-    scanStat: { display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px' },
-    viewBtn: { display: 'flex', alignItems: 'center', gap: '4px', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: '500' },
-    emptyState: { display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px 24px', borderRadius: '16px', textAlign: 'center' },
-    emptyTitle: { fontSize: '18px', fontWeight: '600', marginBottom: '8px' },
-    emptyText: { fontSize: '14px', maxWidth: '300px' },
-    startBtn: {
-        display: 'flex', alignItems: 'center', gap: '8px', marginTop: '20px',
-        padding: '12px 24px',
-        background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-        border: 'none', borderRadius: '10px',
-        color: 'white', fontSize: '14px', fontWeight: '600', cursor: 'pointer'
-    },
-    vulnList: { borderRadius: '12px', overflow: 'hidden' },
-    vulnItem: { display: 'flex', alignItems: 'center', gap: '16px', padding: '16px 20px' },
-    vulnRank: { fontSize: '14px', fontWeight: '600', minWidth: '30px' },
-    vulnType: { flex: 1, fontSize: '14px' },
-    vulnCount: { fontSize: '13px' },
-};
+const StatCard = ({ title, value, icon: Icon, color, trend, positive }) => (
+    <div className="stat-card">
+        <div className="stat-icon" style={{ background: `${color}20`, color }}>
+            <Icon size={24} />
+        </div>
+        <div className="stat-content">
+            <span className="stat-value">{value}</span>
+            <span className="stat-title">{title}</span>
+        </div>
+        {trend && (
+            <span className={`stat-trend ${positive ? 'positive' : 'negative'}`}>
+                {trend}
+            </span>
+        )}
+    </div>
+);
 
 export default Dashboard;

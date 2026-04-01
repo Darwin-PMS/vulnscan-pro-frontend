@@ -20,6 +20,8 @@ import Pricing from './pages/Pricing';
 import LandingPage from './pages/LandingPage';
 import UserProfile from './pages/UserProfile';
 import AdminDashboard from './pages/AdminDashboard';
+import EnterpriseDashboard from './pages/EnterpriseDashboard';
+import ScanModules from './pages/ScanModules';
 
 function App() {
     return (
@@ -92,6 +94,16 @@ function App() {
                                 <Route path="/admin" element={
                                     <ProtectedRoute>
                                         <AdminDashboard />
+                                    </ProtectedRoute>
+                                } />
+                                <Route path="/enterprise" element={
+                                    <ProtectedRoute>
+                                        <EnterpriseDashboard />
+                                    </ProtectedRoute>
+                                } />
+                                <Route path="/scan-modules" element={
+                                    <ProtectedRoute>
+                                        <Navbar /><main style={{ paddingBottom: '40px' }}><ScanModules /></main>
                                     </ProtectedRoute>
                                 } />
                             </Routes>

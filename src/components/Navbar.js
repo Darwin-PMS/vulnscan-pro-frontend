@@ -3,7 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
     Shield, LayoutDashboard, ScanLine, List, Database, Smartphone, 
     BookOpen, Terminal, LogOut, User, Bot, Crown, DollarSign, 
-    Settings, ChevronDown, X, Menu, Zap, Activity, Target, Sun, Moon
+    Settings, ChevronDown, X, Menu, Zap, Activity, Target, Sun, Moon,
+    Layers
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -29,6 +30,7 @@ const Navbar = () => {
 
     const scanNavItems = [
         { path: '/scans', label: 'All Scans', icon: List },
+        { path: '/scan-modules', label: 'Scan Modules', icon: Layers },
         { path: '/dorks', label: 'GHDB Patterns', icon: Database },
     ];
 

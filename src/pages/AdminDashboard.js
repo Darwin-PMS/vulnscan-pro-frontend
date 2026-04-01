@@ -4,7 +4,7 @@ import {
     Users, CreditCard, Scan, Activity, 
     Plus, Edit, Trash2, Search, ChevronLeft, ChevronRight,
     UserCheck, UserX, Crown, AlertCircle, CheckCircle, XCircle, Sun, Moon,
-    ChevronDown, Loader2, Users2, CreditCard2, FileSearch2
+    ChevronDown, Loader2, Users2, CreditCard2, FileSearch2, Building2, Shield, BarChart3
 } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
