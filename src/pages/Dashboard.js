@@ -1,25 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-    Shield, ScanLine, AlertTriangle, CheckCircle, TrendingUp, 
-    Activity, Eye, Bell, FileText, Clock, Globe, Users,
-    Database, Lock, Key, Download, Play, Pause, RefreshCw,
-    ChevronRight, Zap, Server, Code, Cloud, GitBranch, Smartphone, Bot, Box
+    Shield, ScanLine, AlertTriangle, CheckCircle, Activity, Eye, Bell,
+    Clock, Globe, Users, Database, Lock, Key, Download, Play, RefreshCw,
+    ChevronRight, Zap, Code, Cloud, GitBranch, Smartphone, Bot, Box, TrendingUp, TrendingDown
 } from 'lucide-react';
-import api from '../services/api';
+import api, { scanApi } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import { PageContainer } from '../components/layout';
+import { Card, Button, Input, Badge } from '../components/ui';
+import './Dashboard.css';
 
 const Dashboard = () => {
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const { user, startScanMode } = useAuth();
     const [stats, setStats] = useState(null);
     const [recentScans, setRecentScans] = useState([]);
-    const [topVulnerabilities, setTopVulnerabilities] = useState([]);
     const [loading, setLoading] = useState(true);
     const [scanModules, setScanModules] = useState([]);
     const [quickScanUrl, setQuickScanUrl] = useState('');
     const [scanning, setScanning] = useState(false);
 
+    // Initial fetch only - no polling
     useEffect(() => {
         fetchDashboardData();
     }, []);
@@ -28,9 +30,9 @@ const Dashboard = () => {
         setLoading(true);
         try {
             const [statsRes, scansRes, modulesRes] = await Promise.all([
-                api.get('/api/scans/stats/dashboard'),
-                api.get('/api/scans?limit=5'),
-                api.get('/api/scan-modules/modules').catch(() => ({ data: { modules: {} } }))
+                scanApi.getDashboardStats().catch(() => ({ data: {} })),
+                scanApi.getAllScans({ limit: 5 }).catch(() => ({ data: { scans: [] } })),
+                api.get('/scan-modules/modules').catch(() => ({ data: { modules: {} } }))
             ]);
             
             setStats(statsRes.data);
@@ -49,7 +51,8 @@ const Dashboard = () => {
         
         setScanning(true);
         try {
-            const res = await api.post('/api/scans/start', { url: quickScanUrl });
+            const res = await scanApi.startScan(quickScanUrl);
+            startScanMode(); // Extend token expiry to 24 hours
             navigate(`/scan/${res.data.scanId}`);
         } catch (error) {
             console.error('Scan failed:', error);
@@ -81,285 +84,271 @@ const Dashboard = () => {
         container: '#14b8a6'
     };
 
+    const statCards = [
+        { title: 'Total Scans', value: stats?.totalScans || 0, icon: ScanLine, color: '#6366f1', trend: '+12%', positive: true },
+        { title: 'Vulnerabilities', value: stats?.totalVulnerabilities || 0, icon: AlertTriangle, color: '#ef4444', trend: '-5%', positive: false },
+        { title: 'Resolved', value: stats?.resolvedVulnerabilities || 0, icon: CheckCircle, color: '#10b981', trend: '+8%', positive: true },
+        { title: 'Security Score', value: `${stats?.securityScore || 0}%`, icon: Shield, color: '#f59e0b', trend: '+3%', positive: true }
+    ];
+
     if (loading) {
         return (
-            <div className="dashboard-loading">
-                <RefreshCw className="animate-spin" size={32} style={{ color: '#6366f1' }} />
-                <p>Loading dashboard...</p>
-            </div>
+            <PageContainer showNavbar={false}>
+                <div className="dashboard-loading">
+                    <RefreshCw className="animate-spin" size={32} />
+                    <p>Loading dashboard...</p>
+                </div>
+            </PageContainer>
         );
     }
 
     return (
-        <div className="dashboard">
-            <div className="dashboard-header">
-                <div>
-                    <h1>Welcome back, {user?.username || 'User'}</h1>
-                    <p>Here is your security overview</p>
-                </div>
-                <button className="btn btn-primary" onClick={() => navigate('/scan')}>
-                    <ScanLine size={18} /> New Scan
-                </button>
-            </div>
-
+        <PageContainer
+            showNavbar={false}
+            title={`Welcome back, ${user?.username || 'User'}`}
+            subtitle="Here's your security overview"
+            action={
+                <Button leftIcon={<ScanLine size={18} />} onClick={() => navigate('/scan')}>
+                    New Scan
+                </Button>
+            }
+        >
+            {/* Stats Grid */}
             <div className="stats-grid">
-                <StatCard
-                    title="Total Scans"
-                    value={stats?.totalScans || 0}
-                    icon={ScanLine}
-                    color="#6366f1"
-                    trend="+12%"
-                    positive
-                />
-                <StatCard
-                    title="Vulnerabilities"
-                    value={stats?.totalVulnerabilities || 0}
-                    icon={AlertTriangle}
-                    color="#ef4444"
-                    trend="-5%"
-                    positive={false}
-                />
-                <StatCard
-                    title="Resolved"
-                    value={stats?.resolvedVulnerabilities || 0}
-                    icon={CheckCircle}
-                    color="#10b981"
-                    trend="+8%"
-                    positive
-                />
-                <StatCard
-                    title="Security Score"
-                    value={`${stats?.securityScore || 0}%`}
-                    icon={Shield}
-                    color="#f59e0b"
-                    trend="+3%"
-                    positive
-                />
+                {statCards.map((stat, index) => (
+                    <DashboardStatCard key={index} {...stat} />
+                ))}
             </div>
 
-            <div className="dashboard-grid">
+            {/* Main Content Grid */}
+            <div className="dashboard-content-grid">
+                {/* Main Column */}
                 <div className="dashboard-main">
-                    <div className="card quick-scan-card">
-                        <h3><Zap size={18} /> Quick Scan</h3>
-                        <form onSubmit={handleQuickScan}>
-                            <div className="quick-scan-form">
-                                <input
+                    {/* Quick Scan */}
+                    <Card className="quick-scan-card" padding="lg">
+                        <Card.Title icon={<Zap size={20} />}>Quick Scan</Card.Title>
+                        <Card.Content>
+                            <form onSubmit={handleQuickScan} className="quick-scan-form">
+                                <Input
                                     type="url"
                                     placeholder="https://example.com"
                                     value={quickScanUrl}
                                     onChange={(e) => setQuickScanUrl(e.target.value)}
+                                    leftIcon={<Globe size={18} />}
                                     required
                                 />
-                                <button type="submit" className="btn btn-primary" disabled={scanning}>
-                                    {scanning ? <RefreshCw className="animate-spin" size={18} /> : <Play size={18} />}
-                                    {scanning ? 'Scanning...' : 'Scan'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
+                                <Button type="submit" isLoading={scanning} leftIcon={!scanning && <Play size={18} />}>
+                                    {scanning ? 'Scanning...' : 'Start Scan'}
+                                </Button>
+                            </form>
+                        </Card.Content>
+                    </Card>
 
-                    <div className="card scan-modules-card">
-                        <div className="card-header">
-                            <h3><Shield size={18} /> Security Scan Modules</h3>
-                            <button className="btn btn-secondary btn-sm" onClick={() => navigate('/scan-modules')}>
+                    {/* Scan Modules */}
+                    <Card className="modules-card" padding="lg">
+                        <Card.Header>
+                            <Card.Title icon={<Shield size={20} />}>Security Scan Modules</Card.Title>
+                            <Button variant="secondary" size="sm" onClick={() => navigate('/scan-modules')}>
                                 View All
-                            </button>
-                        </div>
-                        <div className="modules-grid">
-                            {Object.entries(scanModules).map(([id, module]) => {
-                                const Icon = moduleIcons[id] || Shield;
-                                const color = moduleColors[id] || '#6366f1';
-                                return (
-                                    <div 
-                                        key={id} 
-                                        className="module-item"
-                                        onClick={() => navigate('/scan-modules')}
-                                        style={{ borderColor: color }}
-                                    >
-                                        <div className="module-icon" style={{ background: `${color}20`, color }}>
-                                            <Icon size={24} />
+                            </Button>
+                        </Card.Header>
+                        <Card.Content>
+                            <div className="modules-grid">
+                                {Object.entries(scanModules).map(([id, module]) => {
+                                    const Icon = moduleIcons[id] || Shield;
+                                    const color = moduleColors[id] || '#6366f1';
+                                    return (
+                                        <div 
+                                            key={id} 
+                                            className="module-item"
+                                            onClick={() => navigate('/scan-modules')}
+                                            style={{ '--module-color': color }}
+                                        >
+                                            <div className="module-icon" style={{ background: `${color}15`, color }}>
+                                                <Icon size={24} />
+                                            </div>
+                                            <div className="module-info">
+                                                <h4>{module.name}</h4>
+                                                <p>{module.categories?.totalPatterns || 0} patterns</p>
+                                            </div>
                                         </div>
-                                        <div className="module-info">
-                                            <h4>{module.name}</h4>
-                                            <p>{module.categories?.totalPatterns || 0} patterns</p>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
+                                    );
+                                })}
+                            </div>
+                        </Card.Content>
+                    </Card>
 
-                    <div className="card recent-scans-card">
-                        <div className="card-header">
-                            <h3><Clock size={18} /> Recent Scans</h3>
-                            <button className="btn btn-secondary btn-sm" onClick={() => navigate('/scans')}>
+                    {/* Recent Scans */}
+                    <Card className="recent-scans-card" padding="lg">
+                        <Card.Header>
+                            <Card.Title icon={<Clock size={20} />}>Recent Scans</Card.Title>
+                            <Button variant="secondary" size="sm" onClick={() => navigate('/scans')}>
                                 View All
-                            </button>
-                        </div>
-                        {recentScans.length === 0 ? (
-                            <div className="empty-state">
-                                <ScanLine size={48} />
-                                <p>No scans yet. Start your first scan!</p>
-                                <button className="btn btn-primary" onClick={() => navigate('/scan')}>
-                                    Start Scan
-                                </button>
-                            </div>
-                        ) : (
-                            <div className="scans-list">
-                                {recentScans.map((scan) => (
-                                    <div 
-                                        key={scan.id} 
-                                        className="scan-item"
-                                        onClick={() => navigate(`/scan/${scan.scan_id}`)}
-                                    >
-                                        <div className="scan-info">
-                                            <Globe size={16} />
-                                            <span className="scan-url">{scan.target_url}</span>
+                            </Button>
+                        </Card.Header>
+                        <Card.Content>
+                            {recentScans.length === 0 ? (
+                                <div className="empty-state">
+                                    <ScanLine size={48} className="empty-icon" />
+                                    <p className="empty-text">No scans yet. Start your first scan!</p>
+                                    <Button onClick={() => navigate('/scan')}>Start Scan</Button>
+                                </div>
+                            ) : (
+                                <div className="scans-list">
+                                    {recentScans.map((scan) => (
+                                        <div 
+                                            key={scan.id || scan.scan_id} 
+                                            className="scan-item"
+                                            onClick={() => navigate(`/scan/${scan.scan_id}`)}
+                                        >
+                                            <div className="scan-info">
+                                                <Globe size={16} className="scan-icon" />
+                                                <span className="scan-url">{scan.target_url}</span>
+                                            </div>
+                                            <div className="scan-meta">
+                                                <Badge.Status status={scan.status} />
+                                                <span className="scan-date">
+                                                    {new Date(scan.created_at).toLocaleDateString()}
+                                                </span>
+                                            </div>
+                                            <div className="scan-vulns">
+                                                {scan.critical_count > 0 && (
+                                                    <span className="vuln-count critical">{scan.critical_count}</span>
+                                                )}
+                                                {scan.high_count > 0 && (
+                                                    <span className="vuln-count high">{scan.high_count}</span>
+                                                )}
+                                                {scan.medium_count > 0 && (
+                                                    <span className="vuln-count medium">{scan.medium_count}</span>
+                                                )}
+                                            </div>
+                                            <ChevronRight size={16} className="scan-arrow" />
                                         </div>
-                                        <div className="scan-meta">
-                                            <span className={`scan-status status-${scan.status}`}>
-                                                {scan.status}
-                                            </span>
-                                            <span className="scan-date">
-                                                {new Date(scan.created_at).toLocaleDateString()}
-                                            </span>
-                                        </div>
-                                        <div className="scan-vulns">
-                                            {scan.critical_count > 0 && (
-                                                <span className="vuln-badge critical">{scan.critical_count}</span>
-                                            )}
-                                            {scan.high_count > 0 && (
-                                                <span className="vuln-badge high">{scan.high_count}</span>
-                                            )}
-                                            {scan.medium_count > 0 && (
-                                                <span className="vuln-badge medium">{scan.medium_count}</span>
-                                            )}
-                                        </div>
-                                        <ChevronRight size={16} />
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
+                                    ))}
+                                </div>
+                            )}
+                        </Card.Content>
+                    </Card>
                 </div>
 
+                {/* Sidebar Column */}
                 <div className="dashboard-sidebar">
-                    <div className="card security-overview-card">
-                        <h3><Activity size={18} /> Security Overview</h3>
-                        <div className="overview-stats">
-                            <div className="overview-stat">
-                                <span className="stat-label">Critical</span>
-                                <span className="stat-value critical">{stats?.criticalVulnerabilities || 0}</span>
+                    {/* Security Overview */}
+                    <Card className="overview-card" padding="lg">
+                        <Card.Title icon={<Activity size={20} />}>Security Overview</Card.Title>
+                        <Card.Content>
+                            <div className="overview-stats">
+                                <div className="overview-stat">
+                                    <span className="overview-label">Critical</span>
+                                    <span className="overview-value critical">{stats?.criticalVulnerabilities || 0}</span>
+                                </div>
+                                <div className="overview-stat">
+                                    <span className="overview-label">High</span>
+                                    <span className="overview-value high">{stats?.highVulnerabilities || 0}</span>
+                                </div>
+                                <div className="overview-stat">
+                                    <span className="overview-label">Medium</span>
+                                    <span className="overview-value medium">{stats?.mediumVulnerabilities || 0}</span>
+                                </div>
+                                <div className="overview-stat">
+                                    <span className="overview-label">Low</span>
+                                    <span className="overview-value low">{stats?.lowVulnerabilities || 0}</span>
+                                </div>
                             </div>
-                            <div className="overview-stat">
-                                <span className="stat-label">High</span>
-                                <span className="stat-value high">{stats?.highVulnerabilities || 0}</span>
+                            <div className="overview-chart">
+                                <div 
+                                    className="chart-bar critical" 
+                                    style={{ height: `${Math.max(5, ((stats?.criticalVulnerabilities || 0) / Math.max(stats?.totalVulnerabilities || 1, 1)) * 100)}%` }} 
+                                />
+                                <div 
+                                    className="chart-bar high" 
+                                    style={{ height: `${Math.max(5, ((stats?.highVulnerabilities || 0) / Math.max(stats?.totalVulnerabilities || 1, 1)) * 100)}%` }} 
+                                />
+                                <div 
+                                    className="chart-bar medium" 
+                                    style={{ height: `${Math.max(5, ((stats?.mediumVulnerabilities || 0) / Math.max(stats?.totalVulnerabilities || 1, 1)) * 100)}%` }} 
+                                />
+                                <div 
+                                    className="chart-bar low" 
+                                    style={{ height: `${Math.max(5, ((stats?.lowVulnerabilities || 0) / Math.max(stats?.totalVulnerabilities || 1, 1)) * 100)}%` }} 
+                                />
                             </div>
-                            <div className="overview-stat">
-                                <span className="stat-label">Medium</span>
-                                <span className="stat-value medium">{stats?.mediumVulnerabilities || 0}</span>
-                            </div>
-                            <div className="overview-stat">
-                                <span className="stat-label">Low</span>
-                                <span className="stat-value low">{stats?.lowVulnerabilities || 0}</span>
-                            </div>
-                        </div>
-                        <div className="overview-chart">
-                            <div 
-                                className="chart-bar" 
-                                style={{ 
-                                    height: `${Math.max(5, ((stats?.criticalVulnerabilities || 0) / Math.max(stats?.totalVulnerabilities || 1, 1)) * 100)}%`,
-                                    background: '#ef4444'
-                                }} 
-                            />
-                            <div 
-                                className="chart-bar" 
-                                style={{ 
-                                    height: `${Math.max(5, ((stats?.highVulnerabilities || 0) / Math.max(stats?.totalVulnerabilities || 1, 1)) * 100)}%`,
-                                    background: '#f97316'
-                                }} 
-                            />
-                            <div 
-                                className="chart-bar" 
-                                style={{ 
-                                    height: `${Math.max(5, ((stats?.mediumVulnerabilities || 0) / Math.max(stats?.totalVulnerabilities || 1, 1)) * 100)}%`,
-                                    background: '#f59e0b'
-                                }} 
-                            />
-                            <div 
-                                className="chart-bar" 
-                                style={{ 
-                                    height: `${Math.max(5, ((stats?.lowVulnerabilities || 0) / Math.max(stats?.totalVulnerabilities || 1, 1)) * 100)}%`,
-                                    background: '#3b82f6'
-                                }} 
-                            />
-                        </div>
-                    </div>
+                        </Card.Content>
+                    </Card>
 
-                    <div className="card quick-links-card">
-                        <h3><Zap size={18} /> Quick Links</h3>
-                        <div className="quick-links">
-                            <button onClick={() => navigate('/scan-modules')}>
-                                <Shield size={18} /> Scan Modules
-                            </button>
-                            <button onClick={() => navigate('/dorks')}>
-                                <Database size={18} /> GHDB Patterns
-                            </button>
-                            <button onClick={() => navigate('/ai-assistant')}>
-                                <Bot size={18} /> AI Assistant
-                            </button>
-                            <button onClick={() => navigate('/mobile')}>
-                                <Smartphone size={18} /> Mobile Testing
-                            </button>
-                            {user?.role === 'admin' && (
-                                <>
-                                    <button onClick={() => navigate('/admin')}>
-                                        <Users size={18} /> Admin Panel
-                                    </button>
-                                    <button onClick={() => navigate('/enterprise')}>
-                                        <Lock size={18} /> Enterprise
-                                    </button>
-                                </>
-                            )}
-                        </div>
-                    </div>
+                    {/* Quick Links */}
+                    <Card className="quick-links-card" padding="lg">
+                        <Card.Title icon={<Zap size={20} />}>Quick Links</Card.Title>
+                        <Card.Content>
+                            <div className="quick-links">
+                                <button onClick={() => navigate('/scan-modules')}>
+                                    <Shield size={18} /> Scan Modules
+                                </button>
+                                <button onClick={() => navigate('/dorks')}>
+                                    <Database size={18} /> GHDB Patterns
+                                </button>
+                                <button onClick={() => navigate('/ai-assistant')}>
+                                    <Bot size={18} /> AI Assistant
+                                </button>
+                                <button onClick={() => navigate('/mobile')}>
+                                    <Smartphone size={18} /> Mobile Testing
+                                </button>
+                                {user?.role === 'admin' && (
+                                    <>
+                                        <button onClick={() => navigate('/admin')}>
+                                            <Users size={18} /> Admin Panel
+                                        </button>
+                                        <button onClick={() => navigate('/enterprise')}>
+                                            <Lock size={18} /> Enterprise
+                                        </button>
+                                    </>
+                                )}
+                            </div>
+                        </Card.Content>
+                    </Card>
 
-                    <div className="card security-tips-card">
-                        <h3><CheckCircle size={18} /> Security Tips</h3>
-                        <div className="tips-list">
-                            <div className="tip">
-                                <CheckCircle size={14} color="#10b981" />
-                                <p>Enable MFA for enhanced account security</p>
+                    {/* Security Tips */}
+                    <Card className="tips-card" padding="lg">
+                        <Card.Title icon={<CheckCircle size={20} />}>Security Tips</Card.Title>
+                        <Card.Content>
+                            <div className="tips-list">
+                                <div className="tip">
+                                    <CheckCircle size={14} className="tip-icon" />
+                                    <p>Enable MFA for enhanced account security</p>
+                                </div>
+                                <div className="tip">
+                                    <CheckCircle size={14} className="tip-icon" />
+                                    <p>Regularly scan for new vulnerabilities</p>
+                                </div>
+                                <div className="tip">
+                                    <CheckCircle size={14} className="tip-icon" />
+                                    <p>Review and resolve critical findings promptly</p>
+                                </div>
                             </div>
-                            <div className="tip">
-                                <CheckCircle size={14} color="#10b981" />
-                                <p>Regularly scan for new vulnerabilities</p>
-                            </div>
-                            <div className="tip">
-                                <CheckCircle size={14} color="#10b981" />
-                                <p>Review and resolve critical findings promptly</p>
-                            </div>
-                        </div>
-                    </div>
+                        </Card.Content>
+                    </Card>
                 </div>
             </div>
-        </div>
+        </PageContainer>
     );
 };
 
-const StatCard = ({ title, value, icon: Icon, color, trend, positive }) => (
-    <div className="stat-card">
-        <div className="stat-icon" style={{ background: `${color}20`, color }}>
-            <Icon size={24} />
+const DashboardStatCard = ({ title, value, icon: Icon, color, trend, positive }) => (
+    <div className="dashboard-stat-card" style={{ '--stat-color': color }}>
+        <div className="stat-icon-wrapper">
+            <div className="stat-icon" style={{ background: `${color}15`, color }}>
+                <Icon size={24} />
+            </div>
         </div>
         <div className="stat-content">
             <span className="stat-value">{value}</span>
-            <span className="stat-title">{title}</span>
+            <span className="stat-label">{title}</span>
         </div>
         {trend && (
-            <span className={`stat-trend ${positive ? 'positive' : 'negative'}`}>
+            <div className={`stat-trend ${positive ? 'positive' : 'negative'}`}>
+                {positive ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
                 {trend}
-            </span>
+            </div>
         )}
     </div>
 );

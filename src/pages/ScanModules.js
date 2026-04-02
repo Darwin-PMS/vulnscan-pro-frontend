@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
-    Shield, Search, AlertTriangle, CheckCircle, Globe, Database as DatabaseIcon,
-    FileText, Lock, Key, Eye, ChevronDown, ChevronUp, RefreshCw,
-    Download, Copy, ExternalLink, Filter, BarChart2, Zap, Code,
-    Cloud, GitBranch, Server, Database as DB, Smartphone, Bot, Box
+    Shield, Search, AlertTriangle, CheckCircle, Clock, Zap, Code,
+    Cloud, GitBranch, Smartphone, Bot, Box, Play, ArrowRight, X, ExternalLink, Target, FileText
 } from 'lucide-react';
 import api from '../services/api';
+import { PageContainer } from '../components/layout';
+import { Card, Button, Badge, Modal } from '../components/ui';
+import StatusBadge from '../components/StatusBadge';
 
 const ScanModules = () => {
-    const [activeTab, setActiveTab] = useState('owasp');
+    const navigate = useNavigate();
     const [selectedModules, setSelectedModules] = useState(['owasp']);
     const [url, setUrl] = useState('');
     const [scanning, setScanning] = useState(false);
@@ -25,8 +27,8 @@ const ScanModules = () => {
         setLoading(true);
         try {
             const [modulesRes, scansRes] = await Promise.all([
-                api.get('/api/scan-modules/modules'),
-                api.get('/api/scan-modules/modules/scans?limit=5')
+                api.get('/scan-modules/modules'),
+                api.get('/scan-modules/modules/scans?limit=5')
             ]);
             setModules(modulesRes.data.modules);
             setRecentScans(scansRes.data.scans || []);
@@ -44,7 +46,7 @@ const ScanModules = () => {
         setResults(null);
         
         try {
-            const res = await api.post('/api/scan-modules/modules/scan', { 
+            const res = await api.post('/scan-modules/modules/scan', { 
                 url, 
                 module: selectedModules.length === 1 ? selectedModules[0] : 'all'
             });
@@ -70,388 +72,351 @@ const ScanModules = () => {
 
     const moduleIcons = {
         owasp: Shield,
-        ghdb: DatabaseIcon,
+        ghdb: Bot,
         api: Code,
         cloud: Cloud,
         cicd: GitBranch,
         mobile: Smartphone,
-        llm: Bot,
+        llm: Zap,
         container: Box
     };
 
     if (loading) {
         return (
-            <div style={{ padding: '48px', textAlign: 'center' }}>
-                <RefreshCw className="animate-spin" size={32} style={{ color: '#6366f1' }} />
-                <p style={{ color: '#94a3b8', marginTop: '16px' }}>Loading scan modules...</p>
-            </div>
+            <PageContainer showNavbar={false}>
+                <div className="modules-loading">
+                    <div className="spinner" />
+                    <p>Loading scan modules...</p>
+                </div>
+            </PageContainer>
         );
     }
 
     return (
-        <div style={{ padding: '24px', maxWidth: '1600px', margin: '0 auto' }}>
-            <div style={{ marginBottom: '32px' }}>
-                <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#f1f5f9', marginBottom: '8px' }}>
-                    Security Scan Modules
-                </h1>
-                <p style={{ color: '#94a3b8' }}>
-                    Choose specialized security scanners for comprehensive vulnerability assessment
-                </p>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '32px' }}>
+        <PageContainer
+            showNavbar={false}
+            title="Security Scan Modules"
+            subtitle="Choose specialized security scanners for comprehensive vulnerability assessment"
+        >
+            {/* Module Selection Grid */}
+            <div className="modules-grid">
                 {Object.entries(modules || {}).map(([id, module]) => {
                     const Icon = moduleIcons[id] || Shield;
                     return (
-                        <ModuleCard
+                        <div
                             key={id}
-                            id={id}
-                            name={module.name}
-                            description={module.description}
-                            icon={Icon}
-                            color={module.color}
-                            patternCount={module.categories?.totalPatterns || 0}
-                            selected={selectedModules.includes(id)}
-                            onToggle={() => toggleModule(id)}
-                        />
+                            className={`module-card ${selectedModules.includes(id) ? 'selected' : ''}`}
+                            style={{ '--module-color': module.color || '#6366f1' }}
+                            onClick={() => toggleModule(id)}
+                        >
+                            {selectedModules.includes(id) && (
+                                <div className="module-check">
+                                    <CheckCircle size={16} />
+                                </div>
+                            )}
+                            <div className="module-icon">
+                                <Icon size={24} />
+                            </div>
+                            <h3 className="module-name">{module.name}</h3>
+                            <p className="module-desc">{module.description}</p>
+                            <div className="module-meta">
+                                <span className="module-patterns">{module.categories?.totalPatterns || 0} patterns</span>
+                            </div>
+                        </div>
                     );
                 })}
             </div>
 
-            <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '16px', padding: '24px', marginBottom: '24px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                    <h3 style={{ color: '#f1f5f9', margin: 0 }}>Scan Target</h3>
-                    <span style={{ fontSize: '12px', color: '#94a3b8', background: 'rgba(99, 102, 241, 0.2)', padding: '4px 8px', borderRadius: '4px' }}>
-                        {selectedModules.length} module{selectedModules.length > 1 ? 's' : ''} selected
-                    </span>
-                    <div style={{ display: 'flex', gap: '6px', marginLeft: 'auto' }}>
+            {/* Scan Target Section */}
+            <Card className="scan-target-card" padding="lg">
+                <div className="scan-target-header">
+                    <div className="scan-target-title">
+                        <h3>Scan Target</h3>
+                        <Badge variant="primary" size="sm">
+                            {selectedModules.length} module{selectedModules.length > 1 ? 's' : ''} selected
+                        </Badge>
+                    </div>
+                    <div className="selected-modules">
                         {selectedModules.map(m => (
-                            <span key={m} style={{ 
-                                fontSize: '11px', padding: '2px 8px', borderRadius: '4px',
-                                background: modules?.[m]?.color + '30', 
-                                color: modules?.[m]?.color || '#94a3b8'
-                            }}>
+                            <span 
+                                key={m} 
+                                className="selected-module-tag"
+                                style={{ '--tag-color': modules?.[m]?.color || '#6366f1' }}
+                            >
                                 {modules?.[m]?.name || m}
                             </span>
                         ))}
                     </div>
                 </div>
-                <div style={{ display: 'flex', gap: '12px' }}>
+                <form onSubmit={(e) => { e.preventDefault(); handleScan(); }} className="scan-form">
                     <input
                         type="url"
                         value={url}
                         onChange={(e) => setUrl(e.target.value)}
                         placeholder="https://example.com"
-                        style={{
-                            flex: 1,
-                            padding: '12px 16px',
-                            background: 'rgba(0,0,0,0.3)',
-                            border: '1px solid rgba(255,255,255,0.1)',
-                            borderRadius: '8px',
-                            color: '#f1f5f9',
-                            fontSize: '14px'
-                        }}
+                        className="scan-input"
+                        disabled={scanning}
                     />
-                    <button
-                        onClick={handleScan}
+                    <Button 
+                        type="submit"
                         disabled={scanning || !url}
-                        style={{
-                            padding: '12px 24px',
-                            background: scanning ? '#4f46e5' : '#6366f1',
-                            border: 'none',
-                            borderRadius: '8px',
-                            color: 'white',
-                            fontWeight: '600',
-                            cursor: scanning ? 'not-allowed' : 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px'
-                        }}
+                        isLoading={scanning}
+                        leftIcon={!scanning && <Play size={18} />}
+                        className="scan-button"
                     >
-                        {scanning ? (
-                            <>
-                                <RefreshCw className="animate-spin" size={18} />
-                                Scanning...
-                            </>
-                        ) : (
-                            <>
-                                <Search size={18} />
-                                Scan Now
-                            </>
-                        )}
-                    </button>
-                </div>
-            </div>
+                        {scanning ? 'Scanning...' : 'Scan Now'}
+                    </Button>
+                </form>
+            </Card>
 
-            {scanning && <ScanProgress />}
-
-            {results && !scanning && (
-                <ScanResults results={results} selectedModules={selectedModules} />
+            {/* Progress Indicator */}
+            {scanning && (
+                <Card className="scan-progress-card" padding="lg">
+                    <div className="scan-progress">
+                        <div className="progress-icon">
+                            <Search size={32} className="animate-pulse" />
+                        </div>
+                        <div className="progress-content">
+                            <h3>Scanning Target...</h3>
+                            <p>Analyzing vulnerabilities across selected modules</p>
+                        </div>
+                        <div className="progress-bar-container">
+                            <div className="progress-bar-track">
+                                <div className="progress-bar-fill" style={{ width: '60%' }} />
+                            </div>
+                        </div>
+                    </div>
+                </Card>
             )}
 
-            {recentScans.length > 0 && <RecentScans scans={recentScans} />}
-        </div>
+            {/* Results Section */}
+            {results && !scanning && (
+                <ScanResults results={results} selectedModules={selectedModules} modules={modules} />
+            )}
+
+            {/* Recent Scans */}
+            {recentScans.length > 0 && (
+                <RecentScans scans={recentScans} navigate={navigate} />
+            )}
+        </PageContainer>
     );
 };
 
-const ModuleCard = ({ id, name, description, icon: Icon, color, patternCount, selected, onToggle }) => (
-    <div
-        onClick={onToggle}
-        style={{
-            background: selected ? `${color}15` : 'rgba(255,255,255,0.05)',
-            border: `2px solid ${selected ? color : 'rgba(255,255,255,0.1)'}`,
-            borderRadius: '16px',
-            padding: '20px',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease',
-            position: 'relative'
-        }}
-    >
-        {selected && (
-            <div style={{
-                position: 'absolute', top: '12px', right: '12px',
-                width: '24px', height: '24px', borderRadius: '50%',
-                background: color, display: 'flex', alignItems: 'center', justifyContent: 'center'
-            }}>
-                <CheckCircle size={14} color="white" />
-            </div>
-        )}
-        <div style={{
-            width: '48px', height: '48px', borderRadius: '12px',
-            background: `${color}20`, display: 'flex',
-            alignItems: 'center', justifyContent: 'center',
-            marginBottom: '12px'
-        }}>
-            <Icon size={24} color={color} />
-        </div>
-        <h3 style={{ color: '#f1f5f9', margin: '0 0 4px', fontSize: '15px' }}>{name}</h3>
-        <p style={{ color: '#94a3b8', margin: '0 0 8px', fontSize: '11px', lineHeight: '1.4' }}>{description}</p>
-        <span style={{ fontSize: '11px', color: color, fontWeight: '600' }}>{patternCount} patterns</span>
-    </div>
-);
-
-const ScanProgress = () => (
-    <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '16px', padding: '32px', textAlign: 'center' }}>
-        <RefreshCw className="animate-spin" size={48} style={{ color: '#6366f1', marginBottom: '16px' }} />
-        <h3 style={{ color: '#f1f5f9', marginBottom: '8px' }}>Scanning Target...</h3>
-        <p style={{ color: '#94a3b8' }}>Analyzing vulnerabilities across all selected modules</p>
-        <div style={{ marginTop: '24px', height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden' }}>
-            <div style={{
-                width: '60%',
-                height: '100%',
-                background: 'linear-gradient(90deg, #6366f1, #10b981)',
-                borderRadius: '2px',
-                animation: 'pulse 2s ease-in-out infinite'
-            }} />
-        </div>
-    </div>
-);
-
-const ScanResults = ({ results, selectedModules }) => {
+const ScanResults = ({ results, selectedModules, modules }) => {
     const [selectedVuln, setSelectedVuln] = useState(null);
     const [filterSeverity, setFilterSeverity] = useState('all');
-
-    const getSeverityColor = (severity) => {
-        const colors = { critical: '#ef4444', high: '#f97316', medium: '#f59e0b', low: '#3b82f6', info: '#94a3b8' };
-        return colors[severity] || '#94a3b8';
-    };
 
     const filteredVulns = filterSeverity === 'all' 
         ? results.vulnerabilities 
         : results.vulnerabilities.filter(v => v.severity === filterSeverity);
 
+    const summary = results.summary || {};
+    const totalCount = Object.values(summary).reduce((a, b) => a + b, 0);
+
+    const severityFilters = [
+        { key: 'all', label: 'All', count: totalCount, color: '#6366f1' },
+        { key: 'critical', label: 'Critical', count: summary.critical || 0, color: 'var(--critical-color)' },
+        { key: 'high', label: 'High', count: summary.high || 0, color: 'var(--high-color)' },
+        { key: 'medium', label: 'Medium', count: summary.medium || 0, color: 'var(--warning-color)' },
+        { key: 'low', label: 'Low', count: summary.low || 0, color: 'var(--success-color)' },
+    ];
+
     return (
-        <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                <h2 style={{ color: '#f1f5f9', margin: 0 }}>Scan Results</h2>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                    {['all', 'critical', 'high', 'medium', 'low'].map(sev => (
+        <div className="modules-results">
+            <div className="results-header">
+                <h2>Scan Results</h2>
+                <div className="filter-tabs">
+                    {severityFilters.map((sev) => (
                         <button
-                            key={sev}
-                            onClick={() => setFilterSeverity(sev)}
-                            style={{
-                                padding: '6px 12px',
-                                background: filterSeverity === sev ? getSeverityColor(sev) : 'rgba(255,255,255,0.1)',
-                                border: 'none',
-                                borderRadius: '6px',
-                                color: filterSeverity === sev ? 'white' : '#94a3b8',
-                                fontSize: '12px',
-                                cursor: 'pointer',
-                                textTransform: 'capitalize'
+                            key={sev.key}
+                            className={`filter-tab ${filterSeverity === sev.key ? 'active' : ''}`}
+                            style={{ 
+                                '--tab-color': sev.color,
+                                borderColor: filterSeverity === sev.key ? sev.color : 'transparent',
+                                color: filterSeverity === sev.key ? sev.color : 'var(--text-secondary)'
                             }}
+                            onClick={() => setFilterSeverity(sev.key)}
                         >
-                            {sev}
+                            {sev.label}
+                            <span className="filter-count">{sev.count}</span>
                         </button>
                     ))}
                 </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '16px', marginBottom: '24px' }}>
-                {Object.entries(results.summary || {}).map(([severity, count]) => (
-                    <div key={severity} style={{
-                        background: 'rgba(255,255,255,0.05)',
-                        borderRadius: '12px',
-                        padding: '16px',
-                        textAlign: 'center'
-                    }}>
-                        <span style={{ fontSize: '32px', fontWeight: '700', color: getSeverityColor(severity) }}>{count}</span>
-                        <p style={{ color: '#94a3b8', margin: '4px 0 0', textTransform: 'uppercase', fontSize: '12px' }}>{severity}</p>
+            {/* Summary Stats */}
+            <div className="results-summary">
+                <div className="summary-stat total">
+                    <span className="summary-value">{totalCount}</span>
+                    <span className="summary-label">Total Findings</span>
+                </div>
+                {Object.entries(summary).map(([severity, count]) => (
+                    <div key={severity} className={`summary-stat ${severity}`}>
+                        <span className="summary-value">{count}</span>
+                        <span className="summary-label">{severity}</span>
                     </div>
                 ))}
             </div>
 
-            <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '12px', padding: '20px' }}>
-                <h4 style={{ color: '#f1f5f9', marginBottom: '16px' }}>
-                    Vulnerabilities ({filteredVulns.length})
-                </h4>
+            {/* Vulnerabilities List */}
+            <Card className="vuln-list-card" padding="lg">
+                <h4 className="vuln-list-title">Vulnerabilities ({filteredVulns.length})</h4>
                 
                 {filteredVulns.length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: '48px' }}>
-                        <CheckCircle size={48} color="#10b981" style={{ marginBottom: '16px' }} />
-                        <p style={{ color: '#94a3b8' }}>No vulnerabilities found!</p>
+                    <div className="vuln-empty">
+                        <CheckCircle size={48} />
+                        <h4>No vulnerabilities found!</h4>
+                        <p>Great news - your target appears to be secure.</p>
                     </div>
                 ) : (
-                    <div style={{ maxHeight: '500px', overflowY: 'auto' }}>
+                    <div className="vuln-list">
                         {filteredVulns.map((vuln, idx) => (
                             <div
                                 key={idx}
+                                className="vuln-item"
                                 onClick={() => setSelectedVuln(vuln)}
-                                style={{
-                                    padding: '16px',
-                                    marginBottom: '8px',
-                                    background: selectedVuln === vuln ? 'rgba(99, 102, 241, 0.2)' : 'rgba(0,0,0,0.2)',
-                                    borderRadius: '8px',
-                                    cursor: 'pointer',
-                                    borderLeft: `4px solid ${getSeverityColor(vuln.severity)}`
-                                }}
+                                style={{ '--vuln-color': getSeverityColor(vuln.severity) }}
                             >
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                    <div>
-                                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                            <h5 style={{ color: '#f1f5f9', margin: 0, fontSize: '14px' }}>{vuln.title}</h5>
-                                            <span style={{ fontSize: '10px', color: '#94a3b8', background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: '4px' }}>{vuln.id}</span>
-                                        </div>
-                                        <p style={{ color: '#94a3b8', margin: '4px 0 0', fontSize: '12px' }}>
-                                            {vuln.categoryName || vuln.category || vuln.provider || vuln.pipelineType || vuln.platform || 'General'}
-                                        </p>
+                                <div className="vuln-severity-indicator" />
+                                <div className="vuln-content">
+                                    <div className="vuln-header">
+                                        <h5 className="vuln-title">{vuln.title}</h5>
+                                        <Badge 
+                                            variant={getSeverityVariant(vuln.severity)} 
+                                            size="sm"
+                                        >
+                                            {vuln.severity}
+                                        </Badge>
                                     </div>
-                                    <span style={{
-                                        padding: '4px 8px',
-                                        background: `${getSeverityColor(vuln.severity)}20`,
-                                        color: getSeverityColor(vuln.severity),
-                                        borderRadius: '4px',
-                                        fontSize: '11px',
-                                        fontWeight: '600',
-                                        textTransform: 'uppercase'
-                                    }}>
-                                        {vuln.severity}
-                                    </span>
+                                    <div className="vuln-meta">
+                                        <span className="vuln-category">
+                                            {vuln.categoryName || vuln.category || vuln.provider || vuln.pipelineType || vuln.platform || 'General'}
+                                        </span>
+                                        <span className="vuln-id">{vuln.id}</span>
+                                    </div>
                                 </div>
                             </div>
                         ))}
                     </div>
                 )}
-            </div>
+            </Card>
 
-            {selectedVuln && (
-                <VulnerabilityDetail vuln={selectedVuln} onClose={() => setSelectedVuln(null)} />
-            )}
+            {/* Vulnerability Detail Modal */}
+            <Modal
+                isOpen={!!selectedVuln}
+                onClose={() => setSelectedVuln(null)}
+                title={selectedVuln?.title}
+                size="lg"
+            >
+                {selectedVuln && (
+                    <div className="vuln-detail">
+                        <div className="detail-meta">
+                            <Badge variant={getSeverityVariant(selectedVuln.severity)}>
+                                {selectedVuln.severity}
+                            </Badge>
+                            <span className="detail-id">{selectedVuln.id}</span>
+                        </div>
+
+                        <div className="detail-section">
+                            <div className="detail-section-header">
+                                <Target size={18} />
+                                <h4>Affected URL</h4>
+                            </div>
+                            <div className="detail-url-box">
+                                <code>{selectedVuln.url || 'N/A'}</code>
+                                {selectedVuln.url && (
+                                    <a href={selectedVuln.url} target="_blank" rel="noopener noreferrer" className="url-external">
+                                        <ExternalLink size={14} />
+                                    </a>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="detail-section">
+                            <div className="detail-section-header">
+                                <FileText size={18} />
+                                <h4>Description</h4>
+                            </div>
+                            <p className="detail-text">{selectedVuln.description || 'No description available.'}</p>
+                        </div>
+
+                        {selectedVuln.remediation && (
+                            <div className="detail-section remediation">
+                                <div className="detail-section-header">
+                                    <CheckCircle size={18} />
+                                    <h4>Remediation Steps</h4>
+                                </div>
+                                <p className="detail-text">{selectedVuln.remediation}</p>
+                            </div>
+                        )}
+
+                        <div className="detail-actions">
+                            <Button variant="secondary" onClick={() => setSelectedVuln(null)}>
+                                Close
+                            </Button>
+                            <Button leftIcon={<ExternalLink size={16} />}>
+                                <a href={selectedVuln.url} target="_blank" rel="noopener noreferrer" className="btn-link">
+                                    Visit URL
+                                </a>
+                            </Button>
+                        </div>
+                    </div>
+                )}
+            </Modal>
         </div>
     );
 };
 
-const VulnerabilityDetail = ({ vuln, onClose }) => (
-    <div style={{
-        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-        background: 'rgba(0,0,0,0.8)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        zIndex: 1000
-    }}>
-        <div style={{
-            background: '#1e293b',
-            borderRadius: '16px',
-            padding: '24px',
-            width: '650px',
-            maxHeight: '80vh',
-            overflowY: 'auto'
-        }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
-                <div>
-                    <h3 style={{ color: '#f1f5f9', margin: 0 }}>{vuln.title}</h3>
-                    <span style={{ fontSize: '12px', color: '#94a3b8' }}>{vuln.id}</span>
-                </div>
-                <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '24px' }}>×</button>
-            </div>
-            
-            <div style={{ marginBottom: '16px' }}>
-                <span style={{ fontSize: '12px', color: '#94a3b8' }}>Severity</span>
-                <p style={{ color: '#f1f5f9', margin: '4px 0', textTransform: 'uppercase', fontWeight: '600' }}>{vuln.severity}</p>
-            </div>
-            
-            <div style={{ marginBottom: '16px' }}>
-                <span style={{ fontSize: '12px', color: '#94a3b8' }}>Category</span>
-                <p style={{ color: '#f1f5f9', margin: '4px 0' }}>{vuln.categoryName || vuln.category || vuln.provider || vuln.pipelineType || vuln.platform || 'General'}</p>
-            </div>
-            
-            <div style={{ marginBottom: '16px' }}>
-                <span style={{ fontSize: '12px', color: '#94a3b8' }}>Description</span>
-                <p style={{ color: '#f1f5f9', margin: '4px 0', lineHeight: '1.6' }}>{vuln.description}</p>
-            </div>
-            
-            <div style={{ marginBottom: '16px', background: 'rgba(0,0,0,0.3)', padding: '12px', borderRadius: '8px' }}>
-                <span style={{ fontSize: '12px', color: '#10b981', fontWeight: '600' }}>Remediation</span>
-                <p style={{ color: '#f1f5f9', margin: '8px 0 0', lineHeight: '1.6', fontSize: '14px' }}>{vuln.remediation}</p>
-            </div>
-            
-            <div style={{ display: 'flex', gap: '12px' }}>
-                <button style={{ flex: 1, padding: '12px', background: '#6366f1', border: 'none', borderRadius: '8px', color: 'white', cursor: 'pointer' }}>
-                    Mark as Resolved
-                </button>
-                <button style={{ flex: 1, padding: '12px', background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '8px', color: '#f1f5f9', cursor: 'pointer' }}>
-                    Export Details
-                </button>
-            </div>
-        </div>
-    </div>
-);
-
-const RecentScans = ({ scans }) => (
-    <div style={{ marginTop: '32px' }}>
-        <h3 style={{ color: '#f1f5f9', marginBottom: '16px' }}>Recent Module Scans</h3>
-        <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '12px', overflow: 'hidden' }}>
-            {scans.map((scan, idx) => (
-                <div key={scan.id} style={{
-                    padding: '16px',
-                    borderBottom: idx < scans.length - 1 ? '1px solid rgba(255,255,255,0.1)' : 'none',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
-                }}>
-                    <div>
-                        <p style={{ color: '#f1f5f9', margin: '0 0 4px', fontSize: '14px' }}>{scan.target_url}</p>
-                        <p style={{ color: '#94a3b8', margin: 0, fontSize: '12px' }}>
-                            {new Date(scan.created_at).toLocaleDateString()} • {scan.scan_type || 'Full'}
-                        </p>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                        <div style={{ textAlign: 'right' }}>
-                            <span style={{ color: '#ef4444', fontWeight: '600' }}>{scan.critical_count}</span>
-                            <span style={{ color: '#f97316', fontWeight: '600' }}> / {scan.high_count}</span>
-                        </div>
-                        <span style={{
-                            padding: '4px 12px',
-                            background: scan.status === 'completed' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)',
-                            color: scan.status === 'completed' ? '#10b981' : '#f59e0b',
-                            borderRadius: '4px',
-                            fontSize: '12px'
-                        }}>
-                            {scan.status}
+const RecentScans = ({ scans, navigate }) => (
+    <Card className="recent-scans-card" padding="lg">
+        <h3 className="recent-title">Recent Module Scans</h3>
+        <div className="recent-list">
+            {scans.map((scan) => (
+                <div 
+                    key={scan.id} 
+                    className="recent-item"
+                    onClick={() => navigate(`/scan/${scan.scan_id}`)}
+                >
+                    <div className="recent-info">
+                        <span className="recent-url">{scan.target_url}</span>
+                        <span className="recent-date">
+                            <Clock size={12} /> {new Date(scan.created_at).toLocaleDateString()}
                         </span>
+                    </div>
+                    <div className="recent-stats">
+                        <span className="recent-vulns">
+                            <span className="critical">{scan.critical_count || 0}</span>
+                            <span className="separator">/</span>
+                            <span className="high">{scan.high_count || 0}</span>
+                        </span>
+                        <StatusBadge status={scan.status} />
                     </div>
                 </div>
             ))}
         </div>
-    </div>
+    </Card>
 );
+
+const getSeverityColor = (severity) => {
+    const colors = {
+        critical: 'var(--critical-color)',
+        high: 'var(--high-color)',
+        medium: 'var(--warning-color)',
+        low: 'var(--success-color)',
+        info: 'var(--info-color)'
+    };
+    return colors[severity?.toLowerCase()] || 'var(--info-color)';
+};
+
+const getSeverityVariant = (severity) => {
+    const variants = {
+        critical: 'danger',
+        high: 'warning',
+        medium: 'warning',
+        low: 'success',
+        info: 'info'
+    };
+    return variants[severity?.toLowerCase()] || 'info';
+};
 
 export default ScanModules;

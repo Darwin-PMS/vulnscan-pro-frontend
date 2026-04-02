@@ -1,0 +1,182 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  position: relative;
+  font-family: var(--font-sans);
+  font-size: 14px;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+.btn:disabled,
+.btn-loading {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Sizes */
+.btn-xs {
+  padding: 6px 10px;
+  font-size: 12px;
+  gap: 4px;
+}
+
+.btn-sm {
+  padding: 8px 14px;
+  font-size: 13px;
+}
+
+.btn-md {
+  padding: 12px 20px;
+  font-size: 14px;
+}
+
+.btn-lg {
+  padding: 14px 28px;
+  font-size: 16px;
+  border-radius: var(--radius-lg);
+}
+
+/* Primary */
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+  color: white;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Secondary */
+.btn-secondary {
+  background: var(--card-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--card-bg-hover);
+  border-color: var(--border-light);
+  transform: translateY(-1px);
+}
+
+/* Ghost */
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--primary-color);
+}
+
+/* Danger */
+.btn-danger {
+  background: linear-gradient(135deg, var(--danger-color), var(--danger-hover));
+  color: white;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.btn-danger:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4);
+}
+
+/* Success */
+.btn-success {
+  background: linear-gradient(135deg, var(--secondary-color), var(--secondary-hover));
+  color: white;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.btn-success:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
+}
+
+/* Outline */
+.btn-outline {
+  background: transparent;
+  color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+}
+
+.btn-outline:hover:not(:disabled) {
+  background: rgba(99, 102, 241, 0.1);
+}
+
+/* Full Width */
+.btn-full-width {
+  width: 100%;
+}
+
+/* Icon Button */
+.btn-icon-only {
+  padding: 10px;
+  aspect-ratio: 1;
+}
+
+.btn-icon-only.btn-sm {
+  padding: 8px;
+}
+
+.btn-icon-only.btn-lg {
+  padding: 14px;
+}
+
+/* Loading */
+.btn-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Icon */
+.btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-icon-left {
+  margin-right: 2px;
+}
+
+.btn-icon-right {
+  margin-left: 2px;
+}
+
+/* Light theme adjustments - Use CSS variables */
+[data-theme="light"] .btn-ghost {
+  color: var(--text-secondary);
+}
+
+[data-theme="light"] .btn-ghost:hover:not(:disabled) {
+  background: rgba(99, 102, 241, 0.08);
+  color: var(--primary-color);
+}
+
+[data-theme="light"] .btn-outline {
+  border-color: var(--primary-color);
+}

@@ -4,39 +4,36 @@ import {
     Users, CreditCard, Scan, Activity, 
     Plus, Edit, Trash2, Search, ChevronLeft, ChevronRight,
     UserCheck, UserX, Crown, AlertCircle, CheckCircle, XCircle, Sun, Moon,
-    ChevronDown, Loader2, Users2, FileSearch2, Building2, Shield, BarChart3
+    ChevronDown, Loader2, Users2, FileSearch2, Building2, Shield, BarChart3,
+    LayoutDashboard, TrendingUp, TrendingDown, Minus, Menu, X, Bell, LogOut,
+    Settings, PieChart, List, Grid3X3, ChevronRight as ChevronRightIcon, Home
 } from 'lucide-react';
+import { PieChart as RechartsPie, Pie, Cell, ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from 'recharts';
 import api from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useToast } from '../contexts/ToastContext';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, format } from 'date-fns';
 import { useDebounce, useFormValidation } from '../hooks/useAdmin';
 
 const AdminDashboard = () => {
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const { user, logout } = useAuth();
     const { isDark, toggleTheme } = useTheme();
     const toast = useToast();
     const [activeTab, setActiveTab] = useState('dashboard');
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    const theme = isDark ? {
-        bg: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-        bgCard: 'rgba(255,255,255,0.05)',
-        border: 'rgba(255,255,255,0.1)',
-        text: '#f1f5f9',
-        textSecondary: '#94a3b8',
-        codeBg: 'rgba(0,0,0,0.4)',
-    } : {
-        bg: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-        bgCard: '#ffffff',
-        border: 'rgba(0,0,0,0.08)',
-        text: '#0f172a',
-        textSecondary: '#475569',
-        codeBg: 'rgba(15, 23, 42, 0.05)',
-    };
+    const tabs = [
+        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { id: 'users', label: 'Users', icon: Users, badge: stats?.totalUsers },
+        { id: 'subscriptions', label: 'Subscriptions', icon: CreditCard, badge: stats?.activeSubscriptions },
+        { id: 'tiers', label: 'Pricing Tiers', icon: Crown },
+        { id: 'scans', label: 'Scans', icon: Scan, badge: stats?.totalScans },
+    ];
 
     useEffect(() => {
         if (user?.role !== 'admin') {
@@ -58,186 +55,344 @@ const AdminDashboard = () => {
     };
 
     if (loading) {
-        return <LoadingScreen theme={theme} />;
+        return <LoadingScreen isDark={isDark} />;
     }
 
     return (
-        <div style={{ minHeight: '100vh', background: theme.bg }}>
-            <div style={{ background: theme.bgCard, borderBottom: `1px solid ${theme.border}`, padding: '24px 0' }}>
-                <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                        <h1 style={{ fontSize: '28px', fontWeight: '700', color: theme.text, marginBottom: '4px' }}>Admin Dashboard</h1>
-                        <p style={{ color: theme.textSecondary }}>Manage users, subscriptions, and system settings</p>
+        <div className={`admin-layout ${isDark ? 'admin-dark' : 'admin-light'}`}>
+            <aside className={`admin-sidebar ${sidebarCollapsed ? 'collapsed' : ''} ${mobileSidebarOpen ? 'mobile-open' : ''}`}>
+                <div className="sidebar-header">
+                    <div className="sidebar-logo">
+                        <Shield className="logo-icon" />
+                        {!sidebarCollapsed && <span className="logo-text">VulnScan Pro</span>}
                     </div>
                     <button 
-                        onClick={toggleTheme} 
-                        style={{ background: theme.bgCard, border: `1px solid ${theme.border}`, borderRadius: '12px', padding: '12px', cursor: 'pointer', display: 'flex' }}
-                        aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+                        className="sidebar-toggle"
+                        onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                        aria-label="Toggle sidebar"
                     >
-                        {isDark ? <Sun size={20} style={{ color: '#fbbf24' }} /> : <Moon size={20} style={{ color: '#6366f1' }} />}
+                        <Menu size={20} />
                     </button>
+                </div>
+
+                <nav className="sidebar-nav">
+                    {tabs.map(tab => (
+                        <button
+                            key={tab.id}
+                            className={`nav-item ${activeTab === tab.id ? 'active' : ''}`}
+                            onClick={() => {
+                                setActiveTab(tab.id);
+                                setMobileSidebarOpen(false);
+                            }}
+                            title={sidebarCollapsed ? tab.label : undefined}
+                        >
+                            <tab.icon size={20} />
+                            {!sidebarCollapsed && (
+                                <>
+                                    <span className="nav-label">{tab.label}</span>
+                                    {tab.badge !== undefined && (
+                                        <span className="nav-badge">{tab.badge}</span>
+                                    )}
+                                </>
+                            )}
+                        </button>
+                    ))}
+                </nav>
+
+                <div className="sidebar-footer">
+                    <button 
+                        className="nav-item theme-toggle"
+                        onClick={toggleTheme}
+                        title={isDark ? 'Light mode' : 'Dark mode'}
+                    >
+                        {isDark ? <Sun size={20} /> : <Moon size={20} />}
+                        {!sidebarCollapsed && <span className="nav-label">{isDark ? 'Light Mode' : 'Dark Mode'}</span>}
+                    </button>
+                    <button className="nav-item" onClick={logout} title="Logout">
+                        <LogOut size={20} />
+                        {!sidebarCollapsed && <span className="nav-label">Logout</span>}
+                    </button>
+                </div>
+            </aside>
+
+            <div className="admin-main">
+                <header className="admin-header">
+                    <div className="header-left">
+                        <button 
+                            className="mobile-menu-btn"
+                            onClick={() => setMobileSidebarOpen(true)}
+                        >
+                            <Menu size={24} />
+                        </button>
+                        <div className="breadcrumbs">
+                            <span className="breadcrumb-item">
+                                <Home size={14} />
+                            </span>
+                            <ChevronRightIcon size={14} className="breadcrumb-separator" />
+                            <span className="breadcrumb-item active">
+                                {tabs.find(t => t.id === activeTab)?.label || 'Admin'}
+                            </span>
+                        </div>
+                    </div>
+                    <div className="header-right">
+                        <button className="header-btn" aria-label="Notifications">
+                            <Bell size={20} />
+                            <span className="notification-dot"></span>
+                        </button>
+                        <div className="user-info">
+                            <div className="user-avatar">
+                                {user?.username?.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="user-details">
+                                <span className="user-name">{user?.username}</span>
+                                <span className="user-role">Administrator</span>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+
+                <main className="admin-content">
+                    {activeTab === 'dashboard' && <DashboardOverview stats={stats} isDark={isDark} />}
+                    {activeTab === 'users' && <UsersManagement onUpdate={fetchStats} isDark={isDark} toast={toast} />}
+                    {activeTab === 'subscriptions' && <SubscriptionsManagement isDark={isDark} toast={toast} />}
+                    {activeTab === 'tiers' && <PricingTiersManagement isDark={isDark} />}
+                    {activeTab === 'scans' && <ScansManagement isDark={isDark} toast={toast} />}
+                </main>
+            </div>
+
+            {mobileSidebarOpen && (
+                <div className="sidebar-overlay" onClick={() => setMobileSidebarOpen(false)} />
+            )}
+        </div>
+    );
+};
+
+const LoadingScreen = ({ isDark }) => (
+    <div className={`loading-screen ${isDark ? 'dark' : 'light'}`}>
+        <div className="loading-content">
+            <div className="loading-spinner">
+                <Loader2 size={48} />
+            </div>
+            <p>Loading admin dashboard...</p>
+        </div>
+    </div>
+);
+
+const DashboardOverview = ({ stats, isDark }) => {
+    const chartColors = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+    
+    const subscriptionData = stats?.subscriptionsByTier?.map((tier, i) => ({
+        name: tier.name,
+        value: tier.count,
+        color: chartColors[i % chartColors.length]
+    })) || [];
+
+    const statCards = [
+        { 
+            icon: <Users2 size={24} />, 
+            value: stats?.totalUsers || 0, 
+            label: 'Total Users', 
+            color: '#3b82f6',
+            trend: '+12%',
+            trendUp: true
+        },
+        { 
+            icon: <UserCheck size={24} />, 
+            value: stats?.activeUsers || 0, 
+            label: 'Active Users', 
+            color: '#10b981',
+            trend: '+8%',
+            trendUp: true
+        },
+        { 
+            icon: <Scan size={24} />, 
+            value: stats?.totalScans || 0, 
+            label: 'Total Scans', 
+            color: '#8b5cf6',
+            trend: '+24%',
+            trendUp: true
+        },
+        { 
+            icon: <AlertCircle size={24} />, 
+            value: stats?.totalVulnerabilities || 0, 
+            label: 'Vulnerabilities', 
+            color: '#ef4444',
+            trend: '-5%',
+            trendUp: false
+        },
+    ];
+
+    return (
+        <div className="dashboard-overview">
+            <div className="section-header">
+                <h2>Welcome back, Admin</h2>
+                <p>Here's what's happening with your platform today.</p>
+            </div>
+
+            <div className="stats-grid">
+                {statCards.map((stat, i) => (
+                    <div key={i} className="stat-card" style={{ '--accent-color': stat.color }}>
+                        <div className="stat-header">
+                            <div className="stat-icon" style={{ background: `${stat.color}15`, color: stat.color }}>
+                                {stat.icon}
+                            </div>
+                            <div className={`stat-trend ${stat.trendUp ? 'up' : 'down'}`}>
+                                {stat.trendUp ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+                                {stat.trend}
+                            </div>
+                        </div>
+                        <div className="stat-value">{stat.value.toLocaleString()}</div>
+                        <div className="stat-label">{stat.label}</div>
+                        <div className="stat-bar">
+                            <div className="stat-bar-fill" style={{ width: `${Math.min((stat.value / (stats?.totalUsers || 1)) * 100, 100)}%` }}></div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            <div className="dashboard-grid">
+                <div className="dashboard-card chart-card">
+                    <div className="card-header">
+                        <h3>
+                            <PieChart size={18} />
+                            Subscription Distribution
+                        </h3>
+                    </div>
+                    <div className="chart-content">
+                        {subscriptionData.length > 0 ? (
+                            <>
+                                <div className="pie-chart-container">
+                                    <ResponsiveContainer width="100%" height={200}>
+                                        <RechartsPie>
+                                            <Pie
+                                                data={subscriptionData}
+                                                cx="50%"
+                                                cy="50%"
+                                                innerRadius={50}
+                                                outerRadius={80}
+                                                paddingAngle={5}
+                                                dataKey="value"
+                                            >
+                                                {subscriptionData.map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={entry.color} />
+                                                ))}
+                                            </Pie>
+                                        </RechartsPie>
+                                    </ResponsiveContainer>
+                                </div>
+                                <div className="chart-legend">
+                                    {subscriptionData.map((item, i) => (
+                                        <div key={i} className="legend-item">
+                                            <span className="legend-color" style={{ background: item.color }}></span>
+                                            <span className="legend-label">{item.name}</span>
+                                            <span className="legend-value">{item.value}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </>
+                        ) : (
+                            <EmptyState message="No subscription data available" isDark={isDark} />
+                        )}
+                    </div>
+                </div>
+
+                <div className="dashboard-card activity-card">
+                    <div className="card-header">
+                        <h3>
+                            <Activity size={18} />
+                            Recent Users
+                        </h3>
+                        <span className="view-all">Last 7 days</span>
+                    </div>
+                    <div className="activity-list">
+                        {stats?.recentUsers?.length > 0 ? (
+                            stats.recentUsers.map((user, i) => (
+                                <div key={user.id || i} className="activity-item">
+                                    <div className="activity-avatar">
+                                        {user.username?.charAt(0).toUpperCase()}
+                                    </div>
+                                    <div className="activity-info">
+                                        <span className="activity-name">{user.username}</span>
+                                        <span className="activity-meta">{user.email}</span>
+                                    </div>
+                                    <span className="activity-time">
+                                        {formatDistanceToNow(new Date(user.created_at), { addSuffix: true })}
+                                    </span>
+                                </div>
+                            ))
+                        ) : (
+                            <EmptyState message="No recent users" isDark={isDark} />
+                        )}
+                    </div>
                 </div>
             </div>
 
-            <div className="container" style={{ padding: '24px 0' }}>
-                <nav style={{ display: 'flex', gap: '8px', marginBottom: '24px', borderBottom: `1px solid ${theme.border}`, paddingBottom: '16px', flexWrap: 'wrap' }} role="tablist" aria-label="Admin sections">
-                    <TabButton theme={theme} active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} icon={<Activity size={18} />} label="Dashboard" />
-                    <TabButton theme={theme} active={activeTab === 'users'} onClick={() => setActiveTab('users')} icon={<Users size={18} />} label="Users" />
-                    <TabButton theme={theme} active={activeTab === 'subscriptions'} onClick={() => setActiveTab('subscriptions')} icon={<CreditCard size={18} />} label="Subscriptions" />
-                    <TabButton theme={theme} active={activeTab === 'tiers'} onClick={() => setActiveTab('tiers')} icon={<Crown size={18} />} label="Pricing Tiers" />
-                    <TabButton theme={theme} active={activeTab === 'scans'} onClick={() => setActiveTab('scans')} icon={<Scan size={18} />} label="Scans" />
-                </nav>
-
-                {activeTab === 'dashboard' && <DashboardOverview stats={stats} theme={theme} />}
-                {activeTab === 'users' && <UsersManagement onUpdate={fetchStats} theme={theme} toast={toast} />}
-                {activeTab === 'subscriptions' && <SubscriptionsManagement theme={theme} toast={toast} />}
-                {activeTab === 'tiers' && <PricingTiersManagement theme={theme} />}
-                {activeTab === 'scans' && <ScansManagement theme={theme} toast={toast} />}
+            <div className="dashboard-card scans-card">
+                <div className="card-header">
+                    <h3>
+                        <Scan size={18} />
+                        Recent Scans
+                    </h3>
+                    <span className="view-all">View all scans</span>
+                </div>
+                <div className="table-wrapper">
+                    <table className="admin-table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Target URL</th>
+                                <th>Status</th>
+                                <th>Vulnerabilities</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {stats?.recentScans?.length > 0 ? (
+                                stats.recentScans.map(scan => (
+                                    <tr key={scan.scan_id}>
+                                        <td>
+                                            <div className="table-user">
+                                                <div className="table-avatar">
+                                                    {scan.username?.charAt(0).toUpperCase() || 'A'}
+                                                </div>
+                                                {scan.username || 'Anonymous'}
+                                            </div>
+                                        </td>
+                                        <td className="url-cell">{scan.target_url}</td>
+                                        <td><StatusBadge status={scan.status} /></td>
+                                        <td>
+                                            <span className="vuln-count">
+                                                {scan.total_vulnerabilities || 0}
+                                            </span>
+                                        </td>
+                                        <td className="date-cell">
+                                            {format(new Date(scan.created_at), 'MMM d, yyyy')}
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={5}>
+                                        <EmptyState message="No recent scans" isDark={isDark} />
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     );
 };
 
-const LoadingScreen = ({ theme }) => (
-    <div style={{ minHeight: '100vh', background: theme.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ textAlign: 'center' }}>
-            <Loader2 size={48} style={{ color: '#6366f1', animation: 'spin 1s linear infinite' }} />
-            <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
-            <p style={{ color: theme.textSecondary, marginTop: '16px' }}>Loading admin dashboard...</p>
-        </div>
+const EmptyState = ({ message, isDark, icon: Icon }) => (
+    <div className="empty-state">
+        {Icon ? <Icon size={40} className="empty-icon" /> : <Search size={40} className="empty-icon" />}
+        <p className="empty-message">{message}</p>
     </div>
 );
 
-const TabButton = ({ theme, active, onClick, icon, label }) => (
-    <button
-        onClick={onClick}
-        role="tab"
-        aria-selected={active}
-        style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '10px 16px',
-            background: active ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : 'transparent',
-            color: active ? 'white' : theme.textSecondary,
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: 500,
-            transition: 'all 0.2s'
-        }}
-    >
-        {icon}
-        {label}
-    </button>
-);
-
-const DashboardOverview = ({ stats, theme }) => (
-    <div>
-        <div className="grid grid-4" style={{ marginBottom: '32px' }}>
-            <StatCard theme={theme} icon={<Users2 size={24} />} value={stats?.totalUsers || 0} label="Total Users" color="#3b82f6" />
-            <StatCard theme={theme} icon={<UserCheck size={24} />} value={stats?.activeUsers || 0} label="Active Users" color="#10b981" />
-            <StatCard theme={theme} icon={<Scan size={24} />} value={stats?.totalScans || 0} label="Total Scans" color="#8b5cf6" />
-            <StatCard theme={theme} icon={<AlertCircle size={24} />} value={stats?.totalVulnerabilities || 0} label="Vulnerabilities" color="#ef4444" />
-        </div>
-
-        <div className="grid grid-2" style={{ marginBottom: '32px' }}>
-            <div style={{ background: theme.bgCard, border: `1px solid ${theme.border}`, borderRadius: '16px', padding: '20px' }}>
-                <h3 style={{ marginBottom: '20px', color: theme.text }}>Subscription Distribution</h3>
-                {stats?.subscriptionsByTier?.length > 0 ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        {stats.subscriptionsByTier.map(tier => (
-                            <div key={tier.name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: theme.text }}>
-                                <span>{tier.name}</span>
-                                <span style={{ fontWeight: 600, color: '#6366f1' }}>{tier.count}</span>
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <EmptyState message="No subscription data available" theme={theme} />
-                )}
-            </div>
-
-            <div style={{ background: theme.bgCard, border: `1px solid ${theme.border}`, borderRadius: '16px', padding: '20px' }}>
-                <h3 style={{ marginBottom: '20px', color: theme.text }}>Recent Users</h3>
-                {stats?.recentUsers?.length > 0 ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        {stats.recentUsers.map(user => (
-                            <div key={user.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <div>
-                                    <div style={{ fontWeight: 500, color: theme.text }}>{user.username}</div>
-                                    <div style={{ fontSize: '12px', color: theme.textSecondary }}>{user.email}</div>
-                                </div>
-                                <span style={{ fontSize: '12px', color: theme.textSecondary }}>
-                                    {formatDistanceToNow(new Date(user.created_at), { addSuffix: true })}
-                                </span>
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <EmptyState message="No recent users" theme={theme} />
-                )}
-            </div>
-        </div>
-
-        <div style={{ background: theme.bgCard, border: `1px solid ${theme.border}`, borderRadius: '16px', padding: '20px' }}>
-            <h3 style={{ marginBottom: '20px', color: theme.text }}>Recent Scans</h3>
-            {stats?.recentScans?.length > 0 ? (
-                <div style={{ overflowX: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                        <thead>
-                            <tr>
-                                <th style={{ textAlign: 'left', padding: '12px', borderBottom: `1px solid ${theme.border}`, color: theme.textSecondary, fontSize: '13px' }}>User</th>
-                                <th style={{ textAlign: 'left', padding: '12px', borderBottom: `1px solid ${theme.border}`, color: theme.textSecondary, fontSize: '13px' }}>Target URL</th>
-                                <th style={{ textAlign: 'left', padding: '12px', borderBottom: `1px solid ${theme.border}`, color: theme.textSecondary, fontSize: '13px' }}>Status</th>
-                                <th style={{ textAlign: 'left', padding: '12px', borderBottom: `1px solid ${theme.border}`, color: theme.textSecondary, fontSize: '13px' }}>Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {stats.recentScans.map(scan => (
-                                <tr key={scan.scan_id}>
-                                    <td style={{ padding: '12px', borderBottom: `1px solid ${theme.border}`, color: theme.text }}>{scan.username || 'Anonymous'}</td>
-                                    <td style={{ padding: '12px', borderBottom: `1px solid ${theme.border}`, color: theme.text, maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis' }}>{scan.target_url}</td>
-                                    <td style={{ padding: '12px', borderBottom: `1px solid ${theme.border}` }}>
-                                        <StatusBadge status={scan.status} />
-                                    </td>
-                                    <td style={{ padding: '12px', borderBottom: `1px solid ${theme.border}`, color: theme.textSecondary, fontSize: '13px' }}>{formatDistanceToNow(new Date(scan.created_at), { addSuffix: true })}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            ) : (
-                <EmptyState message="No recent scans" theme={theme} />
-            )}
-        </div>
-    </div>
-);
-
-const EmptyState = ({ message, theme, icon: Icon }) => (
-    <div style={{ textAlign: 'center', padding: '32px', color: theme.textSecondary }}>
-        {Icon && <Icon size={32} style={{ marginBottom: '8px', opacity: 0.5 }} />}
-        <p>{message}</p>
-    </div>
-);
-
-const LoadingRow = ({ cols, theme }) => (
-    <tr>
-        {Array.from({ length: cols }).map((_, i) => (
-            <td key={i} style={{ padding: '12px', borderBottom: `1px solid ${theme.border}` }}>
-                <div style={{ 
-                    height: '16px', 
-                    background: theme.border, 
-                    borderRadius: '4px',
-                    animation: 'pulse 1.5s infinite'
-                }} />
-            </td>
-        ))}
-    </tr>
-);
-
-const UsersManagement = ({ onUpdate, theme, toast }) => {
+const UsersManagement = ({ onUpdate, isDark, toast }) => {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
@@ -264,7 +419,7 @@ const UsersManagement = ({ onUpdate, theme, toast }) => {
         ]
     };
 
-    const { values, errors, handleChange, handleBlur, reset, validateAll, setValues } = useFormValidation(
+    const { values, errors, handleChange, handleBlur, reset, setValues } = useFormValidation(
         { username: '', email: '', password: '', fullName: '', role: 'user' },
         validationRules
     );
@@ -389,180 +544,205 @@ const UsersManagement = ({ onUpdate, theme, toast }) => {
     };
 
     return (
-        <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                    <Search size={18} style={{ color: 'var(--text-secondary)' }} />
-                    <input
-                        type="text"
-                        placeholder="Search users by name or email..."
-                        className="input"
-                        style={{ width: '300px' }}
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        aria-label="Search users"
-                    />
+        <div className="management-section">
+            <div className="section-header">
+                <div>
+                    <h2>User Management</h2>
+                    <p>Manage user accounts and permissions</p>
                 </div>
                 <button className="btn btn-primary" onClick={() => openModal()}>
                     <Plus size={18} /> Add User
                 </button>
             </div>
 
-            <div className="card">
-                <div className="table-container">
-                    <table className="table" role="table" aria-label="Users table">
-                        <thead>
-                            <tr>
-                                <th scope="col">User</th>
-                                <th scope="col">Email</th>
-                                <th scope="col">Role</th>
-                                <th scope="col">Status</th>
-                                <th scope="col">Scans</th>
-                                <th scope="col">Subscription</th>
-                                <th scope="col">Joined</th>
-                                <th scope="col">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {loading ? (
-                                <>
-                                    <LoadingRow cols={8} theme={theme} />
-                                    <LoadingRow cols={8} theme={theme} />
-                                    <LoadingRow cols={8} theme={theme} />
-                                </>
-                            ) : users.length === 0 ? (
-                                <tr>
-                                    <td colSpan={8} style={{ textAlign: 'center', padding: '48px', color: theme.textSecondary }}>
-                                        <Users2 size={48} style={{ opacity: 0.3, marginBottom: '8px' }} />
-                                        <p>No users found</p>
-                                        {search && <p style={{ fontSize: '13px' }}>Try adjusting your search criteria</p>}
-                                    </td>
-                                </tr>
-                            ) : (
-                                users.map(user => (
-                                    <tr key={user.id}>
-                                        <td>
-                                            <div style={{ fontWeight: 500 }}>{user.username}</div>
-                                            <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{user.full_name || 'No name'}</div>
-                                        </td>
-                                        <td>{user.email}</td>
-                                        <td>
-                                            <span style={{
-                                                padding: '4px 8px',
-                                                borderRadius: '4px',
-                                                fontSize: '12px',
-                                                background: user.role === 'admin' ? '#fef3c7' : '#e0e7ff',
-                                                color: user.role === 'admin' ? '#d97706' : '#4f46e5'
-                                            }}>
-                                                {user.role}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            {user.is_active ? (
-                                                <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#10b981' }}>
-                                                    <CheckCircle size={16} /> Active
-                                                </span>
-                                            ) : (
-                                                <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#ef4444' }}>
-                                                    <XCircle size={16} /> Inactive
-                                                </span>
-                                            )}
-                                        </td>
-                                        <td>{user.scans_count || 0}</td>
-                                        <td>
-                                            {user.subscription ? (
-                                                <span style={{
-                                                    padding: '4px 8px',
-                                                    borderRadius: '4px',
-                                                    fontSize: '12px',
-                                                    background: '#dcfce7',
-                                                    color: '#166534'
-                                                }}>
-                                                    {user.subscription.tier_name}
-                                                </span>
-                                            ) : (
-                                                <span style={{ color: 'var(--text-secondary)' }}>Free</span>
-                                            )}
-                                        </td>
-                                        <td>{formatDistanceToNow(new Date(user.created_at), { addSuffix: true })}</td>
-                                        <td>
-                                            <div style={{ display: 'flex', gap: '8px' }}>
-                                                <button 
-                                                    className="btn-icon" 
-                                                    onClick={() => openModal(user)}
-                                                    aria-label={`Edit ${user.username}`}
-                                                    disabled={actionLoading === user.id}
-                                                >
-                                                    <Edit size={16} />
-                                                </button>
-                                                <button 
-                                                    className="btn-icon" 
-                                                    onClick={() => handleToggleActive(user)}
-                                                    title={user.is_active ? 'Deactivate' : 'Activate'}
-                                                    aria-label={user.is_active ? `Deactivate ${user.username}` : `Activate ${user.username}`}
-                                                    disabled={actionLoading === user.id}
-                                                >
-                                                    {user.is_active ? <UserX size={16} /> : <UserCheck size={16} />}
-                                                </button>
-                                                <button 
-                                                    className="btn-icon" 
-                                                    onClick={() => handleToggleRole(user)}
-                                                    title="Toggle Admin"
-                                                    aria-label={`Toggle admin role for ${user.username}`}
-                                                    disabled={actionLoading === user.id}
-                                                >
-                                                    <Crown size={16} />
-                                                </button>
-                                                <button 
-                                                    className="btn-icon" 
-                                                    onClick={() => handleDelete(user.id)}
-                                                    style={{ color: '#ef4444' }}
-                                                    aria-label={`Delete ${user.username}`}
-                                                    disabled={actionLoading === user.id}
-                                                >
-                                                    <Trash2 size={16} />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+            <div className="filters-bar">
+                <div className="search-wrapper">
+                    <Search size={18} className="search-icon" />
+                    <input
+                        type="text"
+                        placeholder="Search users by name or email..."
+                        className="search-input"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        aria-label="Search users"
+                    />
                 </div>
-
-                {!loading && users.length > 0 && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px' }}>
-                        <span style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
-                            Page {page} of {totalPages}
-                        </span>
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                            <button 
-                                className="btn btn-secondary" 
-                                disabled={page === 1} 
-                                onClick={() => setPage(p => p - 1)}
-                                aria-label="Previous page"
-                            >
-                                <ChevronLeft size={16} /> Previous
-                            </button>
-                            <button 
-                                className="btn btn-secondary" 
-                                disabled={page === totalPages} 
-                                onClick={() => setPage(p => p + 1)}
-                                aria-label="Next page"
-                            >
-                                Next <ChevronRight size={16} />
-                            </button>
-                        </div>
-                    </div>
-                )}
+                <div className="results-count">
+                    {users.length} {users.length === 1 ? 'result' : 'results'}
+                </div>
             </div>
 
+            <div className="table-wrapper">
+                <table className="admin-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Scans</th>
+                            <th>Subscription</th>
+                            <th>Joined</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {loading ? (
+                            <>
+                                <LoadingSkeleton cols={7} />
+                                <LoadingSkeleton cols={7} />
+                                <LoadingSkeleton cols={7} />
+                            </>
+                        ) : users.length === 0 ? (
+                            <tr>
+                                <td colSpan={7}>
+                                    <EmptyState 
+                                        message={search ? 'No users match your search' : 'No users found'} 
+                                        isDark={isDark} 
+                                    />
+                                    {search && (
+                                        <button className="btn btn-secondary" onClick={() => setSearch('')}>
+                                            Clear search
+                                        </button>
+                                    )}
+                                </td>
+                            </tr>
+                        ) : (
+                            users.map(user => (
+                                <tr key={user.id}>
+                                    <td>
+                                        <div className="table-user">
+                                            <div className="table-avatar">
+                                                {user.username?.charAt(0).toUpperCase()}
+                                            </div>
+                                            <div className="user-info">
+                                                <span className="user-name">{user.username}</span>
+                                                <span className="user-email">{user.email}</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span className={`role-badge ${user.role}`}>
+                                            {user.role === 'admin' ? <Shield size={12} /> : <Users size={12} />}
+                                            {user.role}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span className={`status-indicator ${user.is_active ? 'active' : 'inactive'}`}>
+                                            <span className="status-dot"></span>
+                                            {user.is_active ? 'Active' : 'Inactive'}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span className="scan-count">{user.scans_count || 0}</span>
+                                    </td>
+                                    <td>
+                                        {user.subscription ? (
+                                            <span className="subscription-badge">
+                                                {user.subscription.tier_name}
+                                            </span>
+                                        ) : (
+                                            <span className="no-subscription">Free</span>
+                                        )}
+                                    </td>
+                                    <td className="date-cell">
+                                        {format(new Date(user.created_at), 'MMM d, yyyy')}
+                                    </td>
+                                    <td>
+                                        <div className="action-buttons">
+                                            <button 
+                                                className="action-btn edit"
+                                                onClick={() => openModal(user)}
+                                                aria-label={`Edit ${user.username}`}
+                                                disabled={actionLoading === user.id}
+                                            >
+                                                <Edit size={16} />
+                                            </button>
+                                            <button 
+                                                className="action-btn toggle"
+                                                onClick={() => handleToggleActive(user)}
+                                                title={user.is_active ? 'Deactivate' : 'Activate'}
+                                                disabled={actionLoading === user.id}
+                                            >
+                                                {user.is_active ? <UserX size={16} /> : <UserCheck size={16} />}
+                                            </button>
+                                            <button 
+                                                className="action-btn crown"
+                                                onClick={() => handleToggleRole(user)}
+                                                title="Toggle Admin"
+                                                disabled={actionLoading === user.id}
+                                            >
+                                                <Crown size={16} />
+                                            </button>
+                                            <button 
+                                                className="action-btn delete"
+                                                onClick={() => handleDelete(user.id)}
+                                                aria-label={`Delete ${user.username}`}
+                                                disabled={actionLoading === user.id}
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
+            </div>
+
+            {!loading && users.length > 0 && (
+                <div className="pagination">
+                    <span className="pagination-info">
+                        Page {page} of {totalPages}
+                    </span>
+                    <div className="pagination-controls">
+                        <button 
+                            className="btn btn-secondary btn-sm"
+                            disabled={page === 1} 
+                            onClick={() => setPage(p => p - 1)}
+                        >
+                            <ChevronLeft size={16} /> Previous
+                        </button>
+                        <div className="page-numbers">
+                            {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                                let pageNum = i + 1;
+                                if (totalPages > 5) {
+                                    if (page <= 3) pageNum = i + 1;
+                                    else if (page >= totalPages - 2) pageNum = totalPages - 4 + i;
+                                    else pageNum = page - 2 + i;
+                                }
+                                return (
+                                    <button
+                                        key={pageNum}
+                                        className={`page-num ${page === pageNum ? 'active' : ''}`}
+                                        onClick={() => setPage(pageNum)}
+                                    >
+                                        {pageNum}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        <button 
+                            className="btn btn-secondary btn-sm"
+                            disabled={page === totalPages} 
+                            onClick={() => setPage(p => p + 1)}
+                        >
+                            Next <ChevronRight size={16} />
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {showModal && (
-                <div className="modal-overlay" onClick={closeModal} role="dialog" aria-modal="true" aria-labelledby="modal-title">
-                    <div className="modal" onClick={e => e.stopPropagation()}>
-                        <h3 id="modal-title">{editingUser ? 'Edit User' : 'Add New User'}</h3>
-                        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px' }}>
+                <div className="modal-overlay" onClick={closeModal}>
+                    <div className="modal animate-scale-in" onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3 id="modal-title">{editingUser ? 'Edit User' : 'Add New User'}</h3>
+                            <button className="modal-close" onClick={closeModal} aria-label="Close modal">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <form onSubmit={handleSubmit} className="modal-form">
                             <FormField 
                                 label="Username" 
                                 name="username" 
@@ -571,6 +751,7 @@ const UsersManagement = ({ onUpdate, theme, toast }) => {
                                 onBlur={handleBlur}
                                 error={errors.username}
                                 required
+                                isDark={isDark}
                             />
                             <FormField 
                                 label="Email" 
@@ -581,6 +762,7 @@ const UsersManagement = ({ onUpdate, theme, toast }) => {
                                 onBlur={handleBlur}
                                 error={errors.email}
                                 required
+                                isDark={isDark}
                             />
                             <FormField 
                                 label={`Password ${editingUser ? '(leave blank to keep current)' : ''}`}
@@ -591,18 +773,20 @@ const UsersManagement = ({ onUpdate, theme, toast }) => {
                                 onBlur={handleBlur}
                                 error={errors.password}
                                 required={!editingUser}
+                                isDark={isDark}
                             />
                             <FormField 
                                 label="Full Name" 
                                 name="fullName" 
                                 value={values.fullName} 
                                 onChange={handleChange}
+                                isDark={isDark}
                             />
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '6px', color: theme.text }}>Role</label>
+                            <div className="form-field">
+                                <label>Role</label>
                                 <select 
                                     name="role" 
-                                    className="input" 
+                                    className="select-input"
                                     value={values.role} 
                                     onChange={handleChange}
                                 >
@@ -610,10 +794,10 @@ const UsersManagement = ({ onUpdate, theme, toast }) => {
                                     <option value="admin">Admin</option>
                                 </select>
                             </div>
-                            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '8px' }}>
+                            <div className="modal-actions">
                                 <button type="button" className="btn btn-secondary" onClick={closeModal}>Cancel</button>
                                 <button type="submit" className="btn btn-primary">
-                                    {editingUser ? 'Update' : 'Create'}
+                                    {editingUser ? 'Update User' : 'Create User'}
                                 </button>
                             </div>
                         </form>
@@ -624,39 +808,42 @@ const UsersManagement = ({ onUpdate, theme, toast }) => {
     );
 };
 
-const FormField = ({ label, name, type = 'text', value, onChange, onBlur, error, required }) => {
-    const { isDark } = useTheme();
-    const theme = isDark ? { text: '#f1f5f9', textSecondary: '#94a3b8', border: 'rgba(255,255,255,0.1)', bgCard: 'rgba(255,255,255,0.05)' } : { text: '#0f172a', textSecondary: '#475569', border: 'rgba(0,0,0,0.08)', bgCard: '#ffffff' };
-    
+const FormField = ({ label, name, type = 'text', value, onChange, onBlur, error, required, isDark }) => {
     return (
-        <div>
-            <label style={{ display: 'block', marginBottom: '6px', color: theme.text }}>
-                {label} {required && <span style={{ color: '#ef4444' }}>*</span>}
+        <div className="form-field">
+            <label>
+                {label} {required && <span className="required">*</span>}
             </label>
             <input
                 type={type}
                 name={name}
-                className="input"
+                className={`form-input ${error ? 'error' : ''}`}
                 value={value}
                 onChange={onChange}
                 onBlur={onBlur}
-                style={{ 
-                    width: '100%',
-                    borderColor: error ? '#ef4444' : theme.border
-                }}
                 aria-invalid={!!error}
                 aria-describedby={error ? `${name}-error` : undefined}
             />
             {error && (
-                <p id={`${name}-error`} style={{ color: '#ef4444', fontSize: '12px', marginTop: '4px' }}>
+                <span id={`${name}-error`} className="error-message">
                     {error}
-                </p>
+                </span>
             )}
         </div>
     );
 };
 
-const SubscriptionsManagement = ({ theme, toast }) => {
+const LoadingSkeleton = ({ cols }) => (
+    <tr>
+        {Array.from({ length: cols }).map((_, i) => (
+            <td key={i}>
+                <div className="skeleton-box" />
+            </td>
+        ))}
+    </tr>
+);
+
+const SubscriptionsManagement = ({ isDark, toast }) => {
     const [subscriptions, setSubscriptions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
@@ -694,118 +881,121 @@ const SubscriptionsManagement = ({ theme, toast }) => {
     };
 
     return (
-        <div>
-            <div className="card">
-                <div className="table-container">
-                    <table className="table" role="table" aria-label="Subscriptions table">
-                        <thead>
+        <div className="management-section">
+            <div className="section-header">
+                <div>
+                    <h2>Subscriptions</h2>
+                    <p>Manage user subscriptions and billing</p>
+                </div>
+            </div>
+
+            <div className="table-wrapper">
+                <table className="admin-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Tier</th>
+                            <th>Billing</th>
+                            <th>Status</th>
+                            <th>Scans Used</th>
+                            <th>Period</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {loading ? (
+                            <>
+                                <LoadingSkeleton cols={7} />
+                                <LoadingSkeleton cols={7} />
+                                <LoadingSkeleton cols={7} />
+                            </>
+                        ) : subscriptions.length === 0 ? (
                             <tr>
-                                <th scope="col">User</th>
-                                <th scope="col">Tier</th>
-                                <th scope="col">Billing</th>
-                                <th scope="col">Status</th>
-                                <th scope="col">Scans Used</th>
-                                <th scope="col">Start Date</th>
-                                <th scope="col">End Date</th>
-                                <th scope="col">Actions</th>
+                                <td colSpan={7}>
+                                    <EmptyState message="No subscriptions found" isDark={isDark} />
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            {loading ? (
-                                <>
-                                    <LoadingRow cols={8} theme={theme} />
-                                    <LoadingRow cols={8} theme={theme} />
-                                    <LoadingRow cols={8} theme={theme} />
-                                </>
-                            ) : subscriptions.length === 0 ? (
-                                <tr>
-                                    <td colSpan={8} style={{ textAlign: 'center', padding: '48px', color: theme.textSecondary }}>
-                                        <CreditCard size={48} style={{ opacity: 0.3, marginBottom: '8px' }} />
-                                        <p>No subscriptions found</p>
+                        ) : (
+                            subscriptions.map(sub => (
+                                <tr key={sub.id}>
+                                    <td>
+                                        <div className="table-user">
+                                            <div className="table-avatar">
+                                                {sub.username?.charAt(0).toUpperCase()}
+                                            </div>
+                                            <div className="user-info">
+                                                <span className="user-name">{sub.username}</span>
+                                                <span className="user-email">{sub.email}</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span className={`tier-badge tier-${sub.tier_id}`}>
+                                            {sub.tier_name}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span className="billing-cycle">{sub.billing_cycle}</span>
+                                    </td>
+                                    <td>
+                                        <span className={`status-badge status-${sub.status}`}>
+                                            {sub.status}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span className="scan-count">{sub.scans_used_this_month}</span>
+                                    </td>
+                                    <td className="date-cell">
+                                        {format(new Date(sub.start_date), 'MMM d')} - {sub.end_date ? format(new Date(sub.end_date), 'MMM d, yyyy') : 'Ongoing'}
+                                    </td>
+                                    <td>
+                                        <select
+                                            className="status-select"
+                                            value={sub.status}
+                                            onChange={(e) => handleUpdateStatus(sub.id, e.target.value)}
+                                            disabled={actionLoading === sub.id}
+                                        >
+                                            <option value="active">Active</option>
+                                            <option value="cancelled">Cancelled</option>
+                                            <option value="expired">Expired</option>
+                                            <option value="trial">Trial</option>
+                                        </select>
                                     </td>
                                 </tr>
-                            ) : (
-                                subscriptions.map(sub => (
-                                    <tr key={sub.id}>
-                                        <td>
-                                            <div style={{ fontWeight: 500 }}>{sub.username}</div>
-                                            <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{sub.email}</div>
-                                        </td>
-                                        <td>
-                                            <span style={{
-                                                padding: '4px 8px',
-                                                borderRadius: '4px',
-                                                fontSize: '12px',
-                                                background: sub.tier_id === 'enterprise' ? '#fef3c7' : 
-                                                           sub.tier_id === 'professional' ? '#e0e7ff' : 
-                                                           sub.tier_id === 'starter' ? '#dbeafe' : '#f3f4f6',
-                                                color: sub.tier_id === 'enterprise' ? '#d97706' : 
-                                                       sub.tier_id === 'professional' ? '#4f46e5' : 
-                                                       sub.tier_id === 'starter' ? '#2563eb' : '#6b7280'
-                                            }}>
-                                                {sub.tier_name}
-                                            </span>
-                                        </td>
-                                        <td>{sub.billing_cycle}</td>
-                                        <td>
-                                            <span style={{
-                                                padding: '4px 8px',
-                                                borderRadius: '4px',
-                                                fontSize: '12px',
-                                                background: sub.status === 'active' ? '#dcfce7' : 
-                                                           sub.status === 'cancelled' ? '#fef2f2' : '#fef3c7',
-                                                color: sub.status === 'active' ? '#166534' : 
-                                                       sub.status === 'cancelled' ? '#dc2626' : '#d97706'
-                                            }}>
-                                                {sub.status}
-                                            </span>
-                                        </td>
-                                        <td>{sub.scans_used_this_month}</td>
-                                        <td>{new Date(sub.start_date).toLocaleDateString()}</td>
-                                        <td>{sub.end_date ? new Date(sub.end_date).toLocaleDateString() : 'N/A'}</td>
-                                        <td>
-                                            <select
-                                                className="input"
-                                                style={{ padding: '6px 12px', fontSize: '13px' }}
-                                                value={sub.status}
-                                                onChange={(e) => handleUpdateStatus(sub.id, e.target.value)}
-                                                disabled={actionLoading === sub.id}
-                                                aria-label={`Update status for ${sub.username}`}
-                                            >
-                                                <option value="active">Active</option>
-                                                <option value="cancelled">Cancelled</option>
-                                                <option value="expired">Expired</option>
-                                                <option value="trial">Trial</option>
-                                            </select>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-
-                {!loading && subscriptions.length > 0 && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px' }}>
-                        <span style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
-                            Page {page} of {totalPages}
-                        </span>
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                            <button className="btn btn-secondary" disabled={page === 1} onClick={() => setPage(p => p - 1)}>
-                                <ChevronLeft size={16} /> Previous
-                            </button>
-                            <button className="btn btn-secondary" disabled={page === totalPages} onClick={() => setPage(p => p + 1)}>
-                                Next <ChevronRight size={16} />
-                            </button>
-                        </div>
-                    </div>
-                )}
+                            ))
+                        )}
+                    </tbody>
+                </table>
             </div>
+
+            {!loading && subscriptions.length > 0 && (
+                <div className="pagination">
+                    <span className="pagination-info">
+                        Page {page} of {totalPages}
+                    </span>
+                    <div className="pagination-controls">
+                        <button 
+                            className="btn btn-secondary btn-sm"
+                            disabled={page === 1} 
+                            onClick={() => setPage(p => p - 1)}
+                        >
+                            <ChevronLeft size={16} /> Previous
+                        </button>
+                        <button 
+                            className="btn btn-secondary btn-sm"
+                            disabled={page === totalPages} 
+                            onClick={() => setPage(p => p + 1)}
+                        >
+                            Next <ChevronRight size={16} />
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
 
-const PricingTiersManagement = ({ theme }) => {
+const PricingTiersManagement = ({ isDark }) => {
     const [tiers, setTiers] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -824,53 +1014,66 @@ const PricingTiersManagement = ({ theme }) => {
         fetchTiers();
     }, []);
 
+    const tierColors = {
+        starter: '#3b82f6',
+        professional: '#8b5cf6',
+        enterprise: '#f59e0b',
+        default: '#6366f1'
+    };
+
     return (
-        <div>
+        <div className="management-section">
+            <div className="section-header">
+                <div>
+                    <h2>Pricing Tiers</h2>
+                    <p>Configure subscription plans and pricing</p>
+                </div>
+            </div>
+
             {loading ? (
-                <div className="grid grid-4">
-                    {[1, 2, 3, 4].map(i => (
-                        <div key={i} style={{ background: theme.bgCard, border: `1px solid ${theme.border}`, borderRadius: '16px', padding: '20px', height: '200px' }}>
-                            <div style={{ height: '20px', background: theme.border, borderRadius: '4px', marginBottom: '16px', animation: 'pulse 1.5s infinite' }} />
-                            <div style={{ height: '40px', background: theme.border, borderRadius: '4px', marginBottom: '8px', width: '60%', animation: 'pulse 1.5s infinite' }} />
+                <div className="tiers-grid">
+                    {[1, 2, 3].map(i => (
+                        <div key={i} className="tier-card skeleton-card">
+                            <div className="skeleton-title"></div>
+                            <div className="skeleton-price"></div>
+                            <div className="skeleton-features"></div>
                         </div>
                     ))}
                 </div>
             ) : tiers.length === 0 ? (
-                <EmptyState message="No pricing tiers available" theme={theme} icon={Crown} />
+                <EmptyState message="No pricing tiers available" isDark={isDark} icon={Crown} />
             ) : (
-                <div className="grid grid-4">
+                <div className="tiers-grid">
                     {tiers.map(tier => (
-                        <div key={tier.tier_id} style={{ background: theme.bgCard, border: `1px solid ${theme.border}`, borderRadius: '16px', padding: '20px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                                <h3 style={{ color: theme.text }}>{tier.name}</h3>
-                                <span style={{
-                                    padding: '4px 8px',
-                                    borderRadius: '4px',
-                                    fontSize: '12px',
-                                    background: tier.is_active ? '#dcfce7' : '#fef2f2',
-                                    color: tier.is_active ? '#166534' : '#dc2626'
-                                }}>
+                        <div key={tier.tier_id} className="tier-card" style={{ '--tier-color': tierColors[tier.tier_id] || tierColors.default }}>
+                            <div className="tier-header">
+                                <h3 className="tier-name">{tier.name}</h3>
+                                <span className={`tier-status ${tier.is_active ? 'active' : 'inactive'}`}>
                                     {tier.is_active ? 'Active' : 'Inactive'}
                                 </span>
                             </div>
-                            <div style={{ fontSize: '32px', fontWeight: 'bold', marginBottom: '8px', color: theme.text }}>
-                                ${parseFloat(tier.price_monthly).toFixed(2)}<span style={{ fontSize: '14px', fontWeight: 'normal', color: theme.textSecondary }}>/mo</span>
+                            <div className="tier-price">
+                                <span className="price-amount">${parseFloat(tier.price_monthly).toFixed(2)}</span>
+                                <span className="price-period">/month</span>
                             </div>
-                            <div style={{ fontSize: '14px', color: theme.textSecondary, marginBottom: '16px' }}>
+                            <div className="tier-yearly">
                                 ${parseFloat(tier.price_yearly).toFixed(2)}/year
                             </div>
-                            <div style={{ borderTop: `1px solid ${theme.border}`, paddingTop: '16px' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', color: theme.text }}>
-                                    <span>Subscribers</span>
-                                    <strong>{tier.subscriberCount}</strong>
+                            <div className="tier-divider"></div>
+                            <div className="tier-stats">
+                                <div className="tier-stat">
+                                    <span className="stat-value">{tier.subscriberCount}</span>
+                                    <span className="stat-label">Subscribers</span>
                                 </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', color: theme.text }}>
-                                    <span>Scan Limit</span>
-                                    <strong>{tier.scan_limit_monthly === -1 ? 'Unlimited' : tier.scan_limit_monthly}/mo</strong>
+                                <div className="tier-stat">
+                                    <span className="stat-value">
+                                        {tier.scan_limit_monthly === -1 ? '∞' : tier.scan_limit_monthly}
+                                    </span>
+                                    <span className="stat-label">Scans/mo</span>
                                 </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', color: theme.text }}>
-                                    <span>Concurrent Scans</span>
-                                    <strong>{tier.concurrent_scans}</strong>
+                                <div className="tier-stat">
+                                    <span className="stat-value">{tier.concurrent_scans}</span>
+                                    <span className="stat-label">Concurrent</span>
                                 </div>
                             </div>
                         </div>
@@ -881,7 +1084,7 @@ const PricingTiersManagement = ({ theme }) => {
     );
 };
 
-const ScansManagement = ({ theme, toast }) => {
+const ScansManagement = ({ isDark, toast }) => {
     const [scans, setScans] = useState([]);
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
@@ -927,121 +1130,146 @@ const ScansManagement = ({ theme, toast }) => {
     };
 
     return (
-        <div>
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '24px' }}>
-                <Search size={18} style={{ color: 'var(--text-secondary)' }} />
-                <input
-                    type="text"
-                    placeholder="Search by URL or username..."
-                    className="input"
-                    style={{ width: '300px' }}
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    aria-label="Search scans"
-                />
+        <div className="management-section">
+            <div className="section-header">
+                <div>
+                    <h2>Scan Management</h2>
+                    <p>View and manage all security scans</p>
+                </div>
             </div>
 
-            <div className="card">
-                <div className="table-container">
-                    <table className="table" role="table" aria-label="Scans table">
-                        <thead>
+            <div className="filters-bar">
+                <div className="search-wrapper">
+                    <Search size={18} className="search-icon" />
+                    <input
+                        type="text"
+                        placeholder="Search by URL or username..."
+                        className="search-input"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        aria-label="Search scans"
+                    />
+                </div>
+                <div className="results-count">
+                    {scans.length} {scans.length === 1 ? 'result' : 'results'}
+                </div>
+            </div>
+
+            <div className="table-wrapper">
+                <table className="admin-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Target URL</th>
+                            <th>Status</th>
+                            <th>Vulnerabilities</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {loading ? (
+                            <>
+                                <LoadingSkeleton cols={6} />
+                                <LoadingSkeleton cols={6} />
+                                <LoadingSkeleton cols={6} />
+                            </>
+                        ) : scans.length === 0 ? (
                             <tr>
-                                <th scope="col">User</th>
-                                <th scope="col">Target URL</th>
-                                <th scope="col">Status</th>
-                                <th scope="col">Vulnerabilities</th>
-                                <th scope="col">Date</th>
-                                <th scope="col">Actions</th>
+                                <td colSpan={6}>
+                                    <EmptyState 
+                                        message={search ? 'No scans match your search' : 'No scans found'} 
+                                        isDark={isDark} 
+                                    />
+                                    {search && (
+                                        <button className="btn btn-secondary" onClick={() => setSearch('')}>
+                                            Clear search
+                                        </button>
+                                    )}
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            {loading ? (
-                                <>
-                                    <LoadingRow cols={6} theme={theme} />
-                                    <LoadingRow cols={6} theme={theme} />
-                                    <LoadingRow cols={6} theme={theme} />
-                                </>
-                            ) : scans.length === 0 ? (
-                                <tr>
-                                    <td colSpan={6} style={{ textAlign: 'center', padding: '48px', color: theme.textSecondary }}>
-                                        <FileSearch2 size={48} style={{ opacity: 0.3, marginBottom: '8px' }} />
-                                        <p>No scans found</p>
-                                        {search && <p style={{ fontSize: '13px' }}>Try adjusting your search criteria</p>}
+                        ) : (
+                            scans.map(scan => (
+                                <tr key={scan.scan_id}>
+                                    <td>
+                                        <div className="table-user">
+                                            <div className="table-avatar">
+                                                {scan.username?.charAt(0).toUpperCase() || 'A'}
+                                            </div>
+                                            {scan.username || 'Anonymous'}
+                                        </div>
+                                    </td>
+                                    <td className="url-cell">{scan.target_url}</td>
+                                    <td><StatusBadge status={scan.status} /></td>
+                                    <td>
+                                        <span className="vuln-count">
+                                            {scan.total_vulnerabilities || 0}
+                                        </span>
+                                    </td>
+                                    <td className="date-cell">
+                                        {format(new Date(scan.created_at), 'MMM d, yyyy')}
+                                    </td>
+                                    <td>
+                                        <button 
+                                            className="action-btn delete"
+                                            onClick={() => handleDelete(scan.scan_id)}
+                                            aria-label={`Delete scan`}
+                                            disabled={actionLoading === scan.scan_id}
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
                                     </td>
                                 </tr>
-                            ) : (
-                                scans.map(scan => (
-                                    <tr key={scan.scan_id}>
-                                        <td>{scan.username || 'Anonymous'}</td>
-                                        <td style={{ maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis' }}>{scan.target_url}</td>
-                                        <td><StatusBadge status={scan.status} /></td>
-                                        <td>{scan.total_vulnerabilities || 0}</td>
-                                        <td>{formatDistanceToNow(new Date(scan.created_at), { addSuffix: true })}</td>
-                                        <td>
-                                            <button 
-                                                className="btn-icon" 
-                                                onClick={() => handleDelete(scan.scan_id)}
-                                                style={{ color: '#ef4444' }}
-                                                aria-label={`Delete scan ${scan.scan_id}`}
-                                                disabled={actionLoading === scan.scan_id}
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-
-                {!loading && scans.length > 0 && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px' }}>
-                        <span style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
-                            Page {page} of {totalPages}
-                        </span>
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                            <button className="btn btn-secondary" disabled={page === 1} onClick={() => setPage(p => p - 1)}>
-                                <ChevronLeft size={16} /> Previous
-                            </button>
-                            <button className="btn btn-secondary" disabled={page === totalPages} onClick={() => setPage(p => p + 1)}>
-                                Next <ChevronRight size={16} />
-                            </button>
-                        </div>
-                    </div>
-                )}
+                            ))
+                        )}
+                    </tbody>
+                </table>
             </div>
+
+            {!loading && scans.length > 0 && (
+                <div className="pagination">
+                    <span className="pagination-info">
+                        Page {page} of {totalPages}
+                    </span>
+                    <div className="pagination-controls">
+                        <button 
+                            className="btn btn-secondary btn-sm"
+                            disabled={page === 1} 
+                            onClick={() => setPage(p => p - 1)}
+                        >
+                            <ChevronLeft size={16} /> Previous
+                        </button>
+                        <button 
+                            className="btn btn-secondary btn-sm"
+                            disabled={page === totalPages} 
+                            onClick={() => setPage(p => p + 1)}
+                        >
+                            Next <ChevronRight size={16} />
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
 
-const StatCard = ({ theme, icon, value, label, color }) => (
-    <div style={{ background: theme.bgCard, border: `1px solid ${theme.border}`, borderRadius: '16px', padding: '20px', textAlign: 'center' }}>
-        <div style={{ width: '48px', height: '48px', margin: '0 auto 12px', background: `${color}20`, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color, marginBottom: '12px' }}>
-            {icon}
-        </div>
-        <div style={{ fontSize: '28px', fontWeight: '700', color: theme.text }}>{value}</div>
-        <div style={{ fontSize: '13px', color: theme.textSecondary }}>{label}</div>
-    </div>
-);
-
 const StatusBadge = ({ status }) => {
-    const colors = {
-        completed: '#10b981',
-        running: '#3b82f6',
-        pending: '#f59e0b',
-        failed: '#ef4444'
+    const statusConfig = {
+        completed: { color: '#10b981', label: 'Completed' },
+        running: { color: '#3b82f6', label: 'Running' },
+        pending: { color: '#f59e0b', label: 'Pending' },
+        failed: { color: '#ef4444', label: 'Failed' },
+        active: { color: '#10b981', label: 'Active' },
+        cancelled: { color: '#ef4444', label: 'Cancelled' },
+        expired: { color: '#6b7280', label: 'Expired' },
+        trial: { color: '#8b5cf6', label: 'Trial' },
     };
 
+    const config = statusConfig[status] || { color: '#6b7280', label: status };
+
     return (
-        <span style={{
-            padding: '4px 8px',
-            borderRadius: '4px',
-            fontSize: '12px',
-            background: `${colors[status] || '#6b7280'}20`,
-            color: colors[status] || '#6b7280'
-        }}>
-            {status}
+        <span className="status-badge" style={{ '--status-color': config.color }}>
+            {config.label}
         </span>
     );
 };

@@ -1,0 +1,124 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+/* Sizes */
+.badge-sm {
+  padding: 2px 8px;
+  font-size: 10px;
+}
+
+.badge-md {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+.badge-lg {
+  padding: 6px 14px;
+  font-size: 14px;
+}
+
+/* Default variants */
+.badge-default {
+  background: var(--card-bg-hover);
+  color: var(--text-secondary);
+}
+
+.badge-primary {
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--primary-color);
+}
+
+.badge-success {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--secondary-color);
+}
+
+.badge-warning {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--warning-color);
+}
+
+.badge-danger {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--danger-color);
+}
+
+.badge-info {
+  background: rgba(59, 130, 246, 0.15);
+  color: var(--info-color);
+}
+
+/* Severity badge */
+.badge-severity {
+  background: var(--badge-bg);
+  color: var(--badge-color);
+  border: 1px solid var(--badge-border);
+}
+
+/* Status badge */
+.badge-status {
+  background: var(--badge-bg);
+  color: var(--badge-color);
+}
+
+/* Role badge */
+.badge-admin {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+.badge-user {
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--primary-color);
+}
+
+/* Subscription badge */
+.badge-subscription {
+  background: var(--badge-bg);
+  color: var(--badge-color);
+}
+
+/* Dot indicator */
+.badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.badge-dot-animated {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* With dot variant */
+.badge-with-dot {
+  padding-left: 8px;
+}
+
+/* Pill style */
+.badge-pill {
+  border-radius: var(--radius-2xl);
+  padding: 4px 14px;
+}

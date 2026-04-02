@@ -1,13 +1,20 @@
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5004/api';
 
 const api = axios.create({
     baseURL: API_URL,
     headers: {
         'Content-Type': 'application/json'
-    }
+    },
+    timeout: 30000
 });
+
+// Rate limit retry configuration
+const RETRY_DELAY = 2000;
+const MAX_RETRIES = 3;
+
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 api.interceptors.request.use((config) => {
     const token = localStorage.getItem('token');
@@ -19,7 +26,25 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use(
     (response) => response,
-    (error) => {
+    async (error) => {
+        const originalRequest = error.config;
+        
+        // Handle 429 Rate Limit with retry
+        if (error.response?.status === 429 && !originalRequest._retry) {
+            originalRequest._retry = originalRequest._retry || 0;
+            
+            if (originalRequest._retry < MAX_RETRIES) {
+                originalRequest._retry++;
+                const retryDelay = RETRY_DELAY * originalRequest._retry;
+                
+                console.log(`Rate limited. Retrying in ${retryDelay}ms (attempt ${originalRequest._retry}/${MAX_RETRIES})`);
+                
+                await sleep(retryDelay);
+                return api(originalRequest);
+            }
+        }
+        
+        // Handle 401/403 - Logout user
         if (error.response?.status === 401 || error.response?.status === 403) {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
@@ -27,6 +52,7 @@ api.interceptors.response.use(
                 window.location.href = '/login';
             }
         }
+        
         return Promise.reject(error);
     }
 );
@@ -105,47 +131,47 @@ export const enterpriseApi = {
     getProtect: () => api.get('/enterprise/nist/protect'),
     getDetect: (params) => api.get('/enterprise/nist/detect', { params }),
     getRiskRegister: () => api.get('/enterprise/nist/risk-register'),
-    
+
     // Incidents
     getIncidents: (params) => api.get('/enterprise/incidents', { params }),
     createIncident: (data) => api.post('/enterprise/incidents', data),
     escalateIncident: (ticketId, data) => api.put(`/enterprise/incidents/${ticketId}/escalate`, data),
-    
+
     // Audit
     getAuditLogs: (params) => api.get('/enterprise/audit/logs', { params }),
     searchAuditLogs: (params) => api.get('/enterprise/audit/search', { params }),
     getSecurityEvents: (params) => api.get('/enterprise/audit/security-events', { params }),
     getAnomalies: () => api.get('/enterprise/audit/anomalies'),
     getComplianceReport: (params) => api.get('/enterprise/audit/compliance-report', { params }),
-    
+
     // MFA
     setupMFA: (method) => api.post('/enterprise/mfa/setup', { method }),
     verifyMFA: (code) => api.post('/enterprise/mfa/verify', { code }),
     getMFAStatus: () => api.get('/enterprise/mfa/status'),
     disableMFA: (code) => api.post('/enterprise/mfa/disable', { code }),
-    
+
     // RBAC
     getPermissions: () => api.get('/enterprise/rbac/permissions'),
     getRoles: () => api.get('/enterprise/rbac/roles'),
     assignRole: (userId, role) => api.put(`/enterprise/rbac/users/${userId}/role`, { role }),
     getRoleAudit: (params) => api.get('/enterprise/rbac/audit', { params }),
-    
+
     // Privacy
     getConsents: () => api.get('/enterprise/privacy/consents'),
     createConsent: (data) => api.post('/enterprise/privacy/consent', data),
     withdrawConsent: (type) => api.delete(`/enterprise/privacy/consent/${type}`),
     exportData: () => api.post('/enterprise/privacy/export'),
     deleteData: (data) => api.post('/enterprise/privacy/delete', data),
-    
+
     // Zero Trust
     calculateSessionTrust: (data) => api.post('/enterprise/zero-trust/session-trust', data),
     registerDevice: (data) => api.post('/enterprise/zero-trust/device', data),
-    
+
     // AI Governance
     validatePrompt: (prompt) => api.post('/enterprise/ai/validate', { prompt }),
     calculateTrustScore: (data) => api.post('/enterprise/ai/trust-score', data),
     getAIAnalytics: (range) => api.get('/enterprise/ai/usage-analytics', { params: { range } }),
-    
+
     // Stats
     getStats: () => api.get('/enterprise/stats'),
     getAlerts: () => api.get('/enterprise/alerts')

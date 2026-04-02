@@ -3,39 +3,40 @@ import { Link, useNavigate } from 'react-router-dom';
 import { 
     Shield, Scan, Zap, Lock, Server, Smartphone, Terminal, 
     Code, Database, Globe, ChevronDown, ArrowRight, CheckCircle,
-    AlertTriangle, Eye, Bot, Layers, Activity, Cpu, ShieldCheck,
+    AlertTriangle, Eye, Bot, Layers, Activity, Cpu, 
     Play, Pause, Menu, X, Star, Users, Clock, Globe2, Award,
     BarChart3, Target, Bug, FileSearch, Terminal as TerminalIcon,
     Layers3, Sparkles, ArrowUpRight, Download, ExternalLink, 
     Brain, Search, ScanLine, KeyRound, Fingerprint, Wifi, Bug2,
     ScrollText, Terminal2, Hexagon, Sun, Moon, Menu as MenuIcon, 
     Eye as EyeIcon, ArrowUp, ChevronRight, Plus, Minus, Mail,
-    Github, Twitter, Linkedin, Sparkle, Rocket, Shield2, User, LogOut
+    Github, Twitter, Linkedin, Sparkle, Rocket, Shield2, User, LogOut,
+    Check, TrendingUp, Clock3, Award as AwardIcon, Building2,
+    Lock as LockIcon, ShieldAlert, ShieldCheck, FingerprintIcon,
+    Wifi as WifiIcon, Smartphone as SmartphoneIcon, Code2, Database as DatabaseIcon
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import PublicNavbar from '../components/PublicNavbar';
 
 const LandingPage = () => {
     const navigate = useNavigate();
-    const { isAuthenticated, user, logout } = useAuth();
-    const { isDark, toggleTheme } = useTheme();
-    const [isScanning, setIsScanning] = useState(false);
-    const [scanProgress, setScanProgress] = useState(0);
+    const { isAuthenticated } = useAuth();
     const [url, setUrl] = useState('');
-    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [activeFeature, setActiveFeature] = useState(0);
     const [scrollY, setScrollY] = useState(0);
     const [visibleSections, setVisibleSections] = useState({});
-
-    const handleLogout = () => {
-        logout();
-    };
+    const [openFaq, setOpenFaq] = useState(null);
+    const [showStickyCTA, setShowStickyCTA] = useState(false);
     
     const statsRef = useRef(null);
     const featuresRef = useRef(null);
 
     useEffect(() => {
-        const handleScroll = () => setScrollY(window.scrollY);
+        const handleScroll = () => {
+            setScrollY(window.scrollY);
+            setShowStickyCTA(window.scrollY > 500);
+        };
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
@@ -119,10 +120,17 @@ const LandingPage = () => {
     ];
 
     const stats = [
-        { value: "50+", label: "Vulnerability Patterns", icon: <Bug className="w-5 h-5" /> },
-        { value: "100K+", label: "Vulnerabilities Found", icon: <Target className="w-5 h-5" /> },
-        { value: "99.9%", label: "Detection Rate", icon: <Activity className="w-5 h-5" /> },
-        { value: "<3s", label: "Average Scan Time", icon: <Zap className="w-5 h-5" /> }
+        { value: "99.9%", label: "Detection Accuracy", icon: <Target className="w-5 h-5" /> },
+        { value: "< 3 min", label: "Average Scan Time", icon: <Zap className="w-5 h-5" /> },
+        { value: "50+", label: "Vulnerability Types", icon: <Bug className="w-5 h-5" /> },
+        { value: "2.4M+", label: "Scans Completed", icon: <Activity className="w-5 h-5" /> },
+        { value: "10K+", label: "Active Users", icon: <Users className="w-5 h-5" /> }
+    ];
+
+    const problemStats = [
+        { value: "60%", label: "of breaches target web applications" },
+        { value: "$4.5M", label: "average cost of a data breach" },
+        { value: "230%", label: "increase in attacks since 2020" }
     ];
 
     const scanningFeatures = [
@@ -137,20 +145,23 @@ const LandingPage = () => {
     const testimonials = [
         {
             name: "Sarah Chen",
-            role: "Security Engineer at Stripe",
-            content: "VulnScan Pro has become an essential part of our security toolkit. The AI-powered remediation suggestions save hours of manual analysis.",
+            role: "Security Engineer",
+            company: "Series B Fintech",
+            content: "VulnScan Pro helped us identify critical SQL injection vulnerabilities that would have cost us $2M in remediation. The AI remediation guidance saved our team 3 weeks of research.",
             avatar: "SC"
         },
         {
             name: "Marcus Johnson",
-            role: "CTO at FinTech Startup",
-            content: "The depth of vulnerability detection is impressive. We caught critical issues that other scanners missed during our pentest prep.",
+            role: "CISO",
+            company: "Enterprise SaaS",
+            content: "We scanned 47 vulnerabilities that our previous scanner missed. The automated reporting made board presentations effortless.",
             avatar: "MJ"
         },
         {
             name: "Emily Rodriguez",
-            role: "DevSecOps Lead at Shopify",
-            content: "Integrating VulnScan into our CI/CD pipeline was seamless. The detailed reports help developers understand and fix issues fast.",
+            role: "DevSecOps Lead",
+            company: "YC-Backed Startup",
+            content: "Integrating VulnScan into our CI/CD pipeline was seamless. The detailed reports help developers understand and fix issues 85% faster.",
             avatar: "ER"
         }
     ];
@@ -158,7 +169,8 @@ const LandingPage = () => {
     const pricingPlans = [
         {
             name: "Starter",
-            price: "Free",
+            price: "$0",
+            period: "/mo",
             description: "Perfect for individual developers",
             features: ["5 scans/month", "Basic vulnerability detection", "Community support", "Standard reports"],
             popular: false
@@ -166,14 +178,16 @@ const LandingPage = () => {
         {
             name: "Professional",
             price: "$49",
-            description: "For growing teams",
+            period: "/mo",
+            description: "For growing security teams",
             features: ["Unlimited scans", "Advanced detection engine", "Priority support", "API access", "Team collaboration", "Custom reports"],
             popular: true
         },
         {
             name: "Enterprise",
             price: "Custom",
-            description: "For organizations",
+            period: "",
+            description: "For large organizations",
             features: ["Everything in Pro", "On-premise deployment", "SSO/SAML", "Dedicated support", "SLA guarantee", "Custom integrations"],
             popular: false
         }
@@ -196,220 +210,242 @@ const LandingPage = () => {
             step: "03",
             icon: <Shield className="w-8 h-8" />,
             title: "Get Results",
-            description: "Receive detailed vulnerability reports with remediation steps"
+            description: "Receive detailed vulnerability reports with AI-powered remediation"
         }
+    ];
+
+    const faqs = [
+        {
+            question: "Is VulnScan Pro safe to use on production applications?",
+            answer: "Yes, absolutely. Our scanning is completely read-only and non-intrusive. We never modify or store your data, and we're SOC 2 Type II compliant. All scans are performed safely without affecting your application's performance."
+        },
+        {
+            question: "How is VulnScan Pro different from other vulnerability scanners?",
+            answer: "Unlike traditional scanners, VulnScan Pro provides AI-powered remediation guidance that tells you exactly how to fix each vulnerability. We also cover web apps, mobile apps (MASVS), APIs, and cloud infrastructure in a single platform - no need for multiple tools."
+        },
+        {
+            question: "Can I integrate VulnScan into my CI/CD pipeline?",
+            answer: "Yes! We offer API access, GitHub Actions integration, webhooks, and direct integrations with Jenkins, GitLab CI, and GitHub Actions for automated security scanning in your development workflow."
+        },
+        {
+            question: "What types of vulnerabilities do you detect?",
+            answer: "We detect 50+ vulnerability types including all OWASP Top 10 categories: SQL injection, XSS, CSRF, broken authentication, sensitive data exposure, XML external entities, broken access control, security misconfigurations, and more."
+        },
+        {
+            question: "Do you offer on-premise deployment?",
+            answer: "Yes, our Enterprise plan includes on-premise deployment options for organizations with strict data residency requirements. Contact our sales team for details."
+        }
+    ];
+
+    const securityBadges = [
+        { name: "SOC 2 Type II", icon: <ShieldCheck className="w-5 h-5" /> },
+        { name: "ISO 27001", icon: <Lock className="w-5 h-5" /> },
+        { name: "GDPR Compliant", icon: <Globe className="w-5 h-5" /> },
+        { name: "OWASP Corporate", icon: <ShieldAlert className="w-5 h-5" /> }
+    ];
+
+    const comparisonData = [
+        { feature: "Scan Time", vulnscan: "< 3 minutes", traditional: "2-4 weeks", others: "30-60 min" },
+        { feature: "AI Remediation", vulnscan: "✓ Included", traditional: "✗ Manual", others: "✗ Limited" },
+        { feature: "Mobile Testing", vulnscan: "✓ Full MASVS", traditional: "✓ Extra cost", others: "✗ Add-on" },
+        { feature: "Cost per scan", vulnscan: "$0-49/mo", traditional: "$15K-50K", others: "$500-2K" },
+        { feature: "API Access", vulnscan: "✓ Included", traditional: "✗", others: "✓ Paid" }
     ];
 
     return (
         <div className="landing-page-light">
-            {/* Navigation */}
-            <nav className="light-nav" style={{ transform: `translateY(${scrollY > 50 ? '-100%' : '0'})` }}>
-                <div className="nav-container-light">
-                    <Link to="/" className="nav-logo-light">
-                        <div className="logo-icon-light">
-                            <Shield className="w-5 h-5" />
-                        </div>
-                        <span>VulnScan Pro</span>
-                    </Link>
-                    
-                    <div className="nav-links-desktop-light">
-                        <a href="#features">Features</a>
-                        <a href="#how-it-works">How It Works</a>
-                        <a href="#pricing">Pricing</a>
-                        <a href="#testimonials">Reviews</a>
-                    </div>
+            {/* Public Navigation */}
+            <PublicNavbar />
 
-                    <div className="nav-actions-light">
-                        {isAuthenticated ? (
-                            <>
-                                <Link to="/dashboard" className="btn-light-ghost" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <User className="w-4 h-4" />
-                                    {user?.username}
-                                </Link>
-                                <button onClick={handleLogout} className="btn-light-ghost" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <LogOut className="w-4 h-4" />
-                                    Logout
+            {/* Hero Section - New Design */}
+            <section className="new-hero-section">
+                <div className="new-hero-bg">
+                    <div className="new-hero-grid"></div>
+                    <div className="new-hero-blob blob-1"></div>
+                    <div className="new-hero-blob blob-2"></div>
+                    <div className="new-hero-blob blob-3"></div>
+                </div>
+
+                <div className="new-hero-container">
+                    <div className="new-hero-content">
+                        <div className="new-hero-badge animate-fade-up">
+                            <Sparkles className="w-4 h-4" />
+                            <span>🏆 #1 AI-Powered AppSec Platform</span>
+                        </div>
+
+                        <h1 className="new-hero-title animate-fade-up" style={{ animationDelay: '0.1s' }}>
+                            Find & Fix Application Vulnerabilities
+                            <br />
+                            <span className="gradient-text">Before They Cost You Millions</span>
+                        </h1>
+
+                        <p className="new-hero-description animate-fade-up" style={{ animationDelay: '0.2s' }}>
+                            Automated security scanning with AI remediation guidance. Scan web apps, 
+                            mobile apps, APIs & cloud infrastructure in minutes—not weeks. Trusted by 
+                            security teams at fintech unicorns and enterprises.
+                        </p>
+
+                        {/* Quick Scan Form */}
+                        <div className="new-quick-scan animate-fade-up" style={{ animationDelay: '0.3s' }}>
+                            <form onSubmit={handleQuickScan} className="new-scan-form">
+                                <div className="new-scan-input-wrapper">
+                                    <Globe className="new-scan-icon" />
+                                    <input
+                                        type="url"
+                                        placeholder="Enter your app URL (e.g., https://yourapp.com)"
+                                        value={url}
+                                        onChange={(e) => setUrl(e.target.value)}
+                                        className="new-scan-input"
+                                        required
+                                    />
+                                </div>
+                                <button type="submit" className="new-scan-btn">
+                                    <ShieldCheck className="w-5 h-5" />
+                                    Start Free Scan
                                 </button>
-                            </>
-                        ) : (
-                            <>
-                                <Link to="/login" className="btn-light-ghost">Sign In</Link>
-                                <Link to="/register" className="btn-light-primary">Get Started Free</Link>
-                            </>
-                        )}
-                        <button onClick={toggleTheme} style={{
-                            padding: '8px',
-                            background: 'transparent',
-                            border: 'none',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                        }}>
-                            {isDark ? <Sun size={20} style={{ color: '#fbbf24' }} /> : <Moon size={20} style={{ color: '#6366f1' }} />}
-                        </button>
-                    </div>
-
-                    <button className="mobile-menu-btn-light" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-                        {mobileMenuOpen ? <X className="w-6 h-6" /> : <MenuIcon className="w-6 h-6" />}
-                    </button>
-                </div>
-
-                {mobileMenuOpen && (
-                    <div className="mobile-menu-light">
-                        <a href="#features" onClick={() => setMobileMenuOpen(false)}>Features</a>
-                        <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)}>How It Works</a>
-                        <a href="#pricing" onClick={() => setMobileMenuOpen(false)}>Pricing</a>
-                        <a href="#testimonials" onClick={() => setMobileMenuOpen(false)}>Reviews</a>
-                        <div className="mobile-menu-actions-light">
-                            {isAuthenticated ? (
-                                <>
-                                    <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>
-                                        <User className="w-4 h-4 mr-2" />
-                                        {user?.username}
-                                    </Link>
-                                    <button onClick={() => { handleLogout(); setMobileMenuOpen(false); }} className="btn-primary-light-fill">
-                                        <LogOut className="w-4 h-4 mr-2" />
-                                        Logout
-                                    </button>
-                                </>
-                            ) : (
-                                <>
-                                    <Link to="/login" onClick={() => setMobileMenuOpen(false)}>Sign In</Link>
-                                    <Link to="/register" className="btn-primary-light-fill" onClick={() => setMobileMenuOpen(false)}>Get Started</Link>
-                                </>
-                            )}
-                        </div>
-                    </div>
-                )}
-            </nav>
-
-            {/* Hero Section */}
-            <section className="hero-section-light">
-                <div className="hero-bg-light">
-                    <div className="hero-grid-light"></div>
-                    <div className="hero-blob hero-blob-1"></div>
-                    <div className="hero-blob hero-blob-2"></div>
-                    <div className="hero-blob hero-blob-3"></div>
-                </div>
-
-                <div className="hero-content-light">
-                    <div className="hero-badge-light animate-fade-up">
-                        <Sparkle className="w-4 h-4" />
-                        <span>AI-Powered Security Scanner</span>
-                    </div>
-
-                    <h1 className="hero-title-light animate-fade-up" style={{ animationDelay: '0.1s' }}>
-                        Find Every Vulnerability
-                        <br />
-                        <span className="gradient-text-light">Before Hackers Do</span>
-                    </h1>
-
-                    <p className="hero-description-light animate-fade-up" style={{ animationDelay: '0.2s' }}>
-                        The most comprehensive web and mobile application security scanner. 
-                        Powered by advanced AI, it discovers OWASP Top 10 vulnerabilities, 
-                        React/Node.js security issues, and mobile app flaws with unprecedented accuracy.
-                    </p>
-
-                    {/* Quick Scan Form */}
-                    <div className="quick-scan-light animate-fade-up" style={{ animationDelay: '0.3s' }}>
-                        <form onSubmit={handleQuickScan} className="quick-scan-form-light">
-                            <div className="scan-input-wrapper-light">
-                                <Globe className="scan-icon-light" />
-                                <input
-                                    type="url"
-                                    placeholder="Enter target URL (e.g., https://example.com)"
-                                    value={url}
-                                    onChange={(e) => setUrl(e.target.value)}
-                                    className="scan-input-light"
-                                    required
-                                />
+                            </form>
+                            <div className="new-scan-features">
+                                <span><CheckCircle className="w-4 h-4" /> No credit card</span>
+                                <span><Clock3 className="w-4 h-4" /> Results in &lt; 3 min</span>
+                                <span><ShieldCheck className="w-4 h-4" /> SOC2 Compliant</span>
                             </div>
-                            <button type="submit" className="scan-btn-light">
-                                <Scan className="w-5 h-5" />
-                                Start Scan
-                            </button>
-                        </form>
-                        <div className="scan-features-light">
-                            <span><Shield className="w-4 h-4" /> Secure scanning</span>
-                            <span><Zap className="w-4 h-4" /> No credentials required</span>
-                            <span><Rocket className="w-4 h-4" /> Instant results</span>
+                        </div>
+
+                        {/* Live Stats */}
+                        <div className="new-hero-stats animate-fade-up" style={{ animationDelay: '0.4s' }}>
+                            <div className="hero-stat">
+                                <span className="hero-stat-value">99.9%</span>
+                                <span className="hero-stat-label">Detection Rate</span>
+                            </div>
+                            <div className="hero-stat-divider"></div>
+                            <div className="hero-stat">
+                                <span className="hero-stat-value">50+</span>
+                                <span className="hero-stat-label">Vulnerability Types</span>
+                            </div>
+                            <div className="hero-stat-divider"></div>
+                            <div className="hero-stat">
+                                <span className="hero-stat-value">2.4M+</span>
+                                <span className="hero-stat-label">Scans Completed</span>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Trust Badges */}
-                    <div className="trust-section-light animate-fade-up" style={{ animationDelay: '0.4s' }}>
-                        <span className="trust-label-light">Trusted by security teams at</span>
-                        <div className="trust-logos-light">
-                            <span className="trust-logo-light">Google</span>
-                            <span className="trust-logo-light">Microsoft</span>
-                            <span className="trust-logo-light">Amazon</span>
-                            <span className="trust-logo-light">Stripe</span>
-                            <span className="trust-logo-light">Shopify</span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Hero Visual */}
-                <div className="hero-visual-light animate-fade-up" style={{ animationDelay: '0.5s' }}>
-                    <div className="scan-preview-light">
-                        <div className="preview-header-light">
-                            <div className="preview-dots-light">
-                                <span></span><span></span><span></span>
+                    {/* Hero Visual */}
+                    <div className="new-hero-visual animate-fade-up" style={{ animationDelay: '0.5s' }}>
+                        <div className="new-scan-preview">
+                            <div className="preview-header">
+                                <div className="preview-dots">
+                                    <span></span><span></span><span></span>
+                                </div>
+                                <span className="preview-title">VulnScan Pro Scanner</span>
                             </div>
-                            <span className="preview-title-light">VulnScan Pro Scanner</span>
-                        </div>
-                        <div className="preview-content-light">
-                            <div className="preview-scan-animation">
-                                <div className="scan-animation-row">
-                                    <ScanLine className="w-4 h-4 text-primary" />
-                                    <span>Scanning target...</span>
-                                    <div className="mini-progress">
-                                        <div className="mini-progress-fill"></div>
+                            <div className="preview-content">
+                                <div className="preview-scan-animation">
+                                    <div className="scan-animation-row">
+                                        <ScanLine className="w-4 h-4" style={{ color: '#6366f1' }} />
+                                        <span>Scanning target...</span>
+                                        <div className="mini-progress">
+                                            <div className="mini-progress-fill"></div>
+                                        </div>
+                                        <span className="scan-percent">65%</span>
                                     </div>
-                                    <span className="scan-percent">65%</span>
                                 </div>
-                            </div>
-                            <div className="preview-findings">
-                                <div className="finding-item critical">
-                                    <div className="finding-icon"><AlertTriangle className="w-4 h-4" /></div>
-                                    <div className="finding-info">
-                                        <span className="finding-title">SQL Injection detected</span>
-                                        <span className="finding-path">login.php?id=</span>
+                                <div className="preview-findings">
+                                    <div className="finding-item critical">
+                                        <div className="finding-icon"><AlertTriangle className="w-4 h-4" /></div>
+                                        <div className="finding-info">
+                                            <span className="finding-title">SQL Injection detected</span>
+                                            <span className="finding-path">login.php?id=</span>
+                                        </div>
+                                        <div className="finding-severity">Critical</div>
                                     </div>
-                                    <div className="finding-severity">Critical</div>
-                                </div>
-                                <div className="finding-item high">
-                                    <div className="finding-icon"><AlertTriangle className="w-4 h-4" /></div>
-                                    <div className="finding-info">
-                                        <span className="finding-title">XSS vulnerability found</span>
-                                        <span className="finding-path">search?q=</span>
+                                    <div className="finding-item high">
+                                        <div className="finding-icon"><AlertTriangle className="w-4 h-4" /></div>
+                                        <div className="finding-info">
+                                            <span className="finding-title">XSS vulnerability found</span>
+                                            <span className="finding-path">search?q=</span>
+                                        </div>
+                                        <div className="finding-severity">High</div>
                                     </div>
-                                    <div className="finding-severity">High</div>
-                                </div>
-                                <div className="finding-item medium">
-                                    <div className="finding-icon"><AlertTriangle className="w-4 h-4" /></div>
-                                    <div className="finding-info">
-                                        <span className="finding-title">Missing security headers</span>
-                                        <span className="finding-path">CSP, X-Frame-Options</span>
+                                    <div className="finding-item medium">
+                                        <div className="finding-icon"><AlertTriangle className="w-4 h-4" /></div>
+                                        <div className="finding-info">
+                                            <span className="finding-title">Missing security headers</span>
+                                            <span className="finding-path">CSP, X-Frame-Options</span>
+                                        </div>
+                                        <div className="finding-severity">Medium</div>
                                     </div>
-                                    <div className="finding-severity">Medium</div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="scroll-indicator-light">
+                <div className="scroll-indicator">
                     <ChevronDown className="w-6 h-6 animate-bounce" />
                 </div>
             </section>
 
+            {/* Problem Agitation Section */}
+            <section className="problem-section" id="problem">
+                <div className="problem-container">
+                    <div className="problem-header">
+                        <span className="problem-badge">
+                            <ShieldAlert className="w-4 h-4" />
+                            Your Apps Are Under Attack
+                        </span>
+                        <h2 className="problem-title">
+                            The Cost of <span className="gradient-text">Inaction</span>
+                        </h2>
+                        <p className="problem-description">
+                            Cyber attacks on web applications are at an all-time high. 
+                            Don't wait for a breach to take action.
+                        </p>
+                    </div>
+                    
+                    <div className="problem-stats">
+                        {problemStats.map((stat, index) => (
+                            <div key={index} className="problem-stat-card">
+                                <div className="problem-stat-value">{stat.value}</div>
+                                <div className="problem-stat-label">{stat.label}</div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="problem-cta">
+                        <Link to="/register" className="btn-primary-new">
+                            <ShieldCheck className="w-5 h-5" />
+                            See How VulnScan Pro Helps
+                        </Link>
+                    </div>
+                </div>
+            </section>
+
+            {/* Security Certifications */}
+            <section className="security-badges-section">
+                <div className="security-container">
+                    <p className="security-label">Enterprise-Grade Security & Compliance</p>
+                    <div className="security-badges">
+                        {securityBadges.map((badge, index) => (
+                            <div key={index} className="security-badge-item">
+                                <div className="security-badge-icon">{badge.icon}</div>
+                                <span>{badge.name}</span>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="security-features">
+                        <span><CheckCircle className="w-4 h-4" /> End-to-end encryption</span>
+                        <span><CheckCircle className="w-4 h-4" /> No data retention</span>
+                        <span><CheckCircle className="w-4 h-4" /> Audit logs available</span>
+                    </div>
+                </div>
+            </section>
+
             {/* Stats Section */}
-            <section className="stats-section-light">
+            <section className="stats-section-light" id="stats">
                 <div className="stats-container-light">
                     {stats.map((stat, index) => (
-                        <div key={index} className="stat-card-light animate-on-scroll" ref={statsRef}>
+                        <div key={index} className="stat-card-light" ref={statsRef}>
                             <div className="stat-icon-light">{stat.icon}</div>
                             <div className="stat-value-light">{stat.value}</div>
                             <div className="stat-label-light">{stat.label}</div>
@@ -424,12 +460,12 @@ const LandingPage = () => {
                     <div className="section-header-light text-center">
                         <span className="section-badge-light">
                             <Layers3 className="w-4 h-4" />
-                            Features
+                            Built for Modern DevSecOps
                         </span>
                         <h2 className="section-title-light">
-                            Everything You Need for
+                            Complete Application Security
                             <br />
-                            <span className="gradient-text-light">Complete Security</span>
+                            <span className="gradient-text-light">In One Platform</span>
                         </h2>
                         <p className="section-description-light">
                             From automated vulnerability scanning to hands-on security labs, 
@@ -495,7 +531,7 @@ const LandingPage = () => {
             </section>
 
             {/* Scanning Capabilities */}
-            <section className="capabilities-section-light">
+            <section className="capabilities-section-light" id="capabilities">
                 <div className="section-container-light">
                     <div className="capabilities-grid-light">
                         <div className="capabilities-text-light">
@@ -573,8 +609,52 @@ const LandingPage = () => {
                 </div>
             </section>
 
+            {/* Comparison Table */}
+            <section className="comparison-section" id="comparison">
+                <div className="section-container-light">
+                    <div className="section-header-light text-center">
+                        <span className="section-badge-light">
+                            <BarChart3 className="w-4 h-4" />
+                            Why Choose VulnScan Pro
+                        </span>
+                        <h2 className="section-title-light">
+                            Security That <span className="gradient-text-light">Actually Works</span>
+                        </h2>
+                    </div>
+
+                    <div className="comparison-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Feature</th>
+                                    <th className="highlight-col">VulnScan Pro</th>
+                                    <th>Traditional Pentest</th>
+                                    <th>Other Scanners</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {comparisonData.map((row, index) => (
+                                    <tr key={index}>
+                                        <td>{row.feature}</td>
+                                        <td className="highlight-col">{row.vulnscan}</td>
+                                        <td>{row.traditional}</td>
+                                        <td>{row.others}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div className="comparison-cta">
+                        <Link to="/register" className="btn-primary-new">
+                            Start Free Comparison →
+                        </Link>
+                    </div>
+                </div>
+            </section>
+
             {/* AI Section */}
-            <section className="ai-section-light">
+            <section className="ai-section-light" id="ai">
                 <div className="section-container-light">
                     <div className="ai-grid-light">
                         <div className="ai-visual-light">
@@ -665,7 +745,7 @@ const LandingPage = () => {
                     <div className="section-header-light text-center">
                         <span className="section-badge-light">
                             <Star className="w-4 h-4" />
-                            Testimonials
+                            Trusted by Security Teams
                         </span>
                         <h2 className="section-title-light">
                             Loved by Security
@@ -687,7 +767,7 @@ const LandingPage = () => {
                                     <div className="author-avatar-light">{testimonial.avatar}</div>
                                     <div className="author-info-light">
                                         <h4>{testimonial.name}</h4>
-                                        <p>{testimonial.role}</p>
+                                        <p>{testimonial.role}, {testimonial.company}</p>
                                     </div>
                                 </div>
                             </div>
@@ -702,15 +782,13 @@ const LandingPage = () => {
                     <div className="section-header-light text-center">
                         <span className="section-badge-light">
                             <BarChart3 className="w-4 h-4" />
-                            Pricing
+                            Simple Pricing
                         </span>
                         <h2 className="section-title-light">
-                            Simple, Transparent
-                            <br />
-                            <span className="gradient-text-light">Pricing</span>
+                            Start Free, Scale as You Grow
                         </h2>
                         <p className="section-description-light">
-                            Start free, scale as you grow. No hidden fees, no surprises.
+                            No hidden fees. No surprises. Choose the plan that fits your needs.
                         </p>
                     </div>
 
@@ -719,7 +797,10 @@ const LandingPage = () => {
                             <div key={index} className={`pricing-card-light ${plan.popular ? 'popular' : ''}`}>
                                 {plan.popular && <span className="popular-badge-light">Most Popular</span>}
                                 <h3 className="plan-name-light">{plan.name}</h3>
-                                <div className="plan-price-light">{plan.price}</div>
+                                <div className="plan-price-light">
+                                    {plan.price}
+                                    {plan.period && <span className="plan-period">{plan.period}</span>}
+                                </div>
                                 <p className="plan-description-light">{plan.description}</p>
                                 <ul className="plan-features-light">
                                     {plan.features.map((feature, i) => (
@@ -733,8 +814,43 @@ const LandingPage = () => {
                                     to="/register" 
                                     className={`plan-btn-light ${plan.popular ? 'btn-primary-light-fill' : 'btn-light-outline'}`}
                                 >
-                                    {plan.name === 'Enterprise' ? 'Contact Sales' : 'Get Started'}
+                                    {plan.name === 'Enterprise' ? 'Contact Sales' : 'Start Free Trial'}
                                 </Link>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* FAQ Section */}
+            <section className="faq-section" id="faq">
+                <div className="faq-container">
+                    <div className="section-header-light text-center">
+                        <span className="section-badge-light">
+                            <ScrollText className="w-4 h-4" />
+                            FAQ
+                        </span>
+                        <h2 className="section-title-light">
+                            Frequently Asked <span className="gradient-text-light">Questions</span>
+                        </h2>
+                    </div>
+
+                    <div className="faq-list">
+                        {faqs.map((faq, index) => (
+                            <div 
+                                key={index} 
+                                className={`faq-item ${openFaq === index ? 'open' : ''}`}
+                                onClick={() => setOpenFaq(openFaq === index ? null : index)}
+                            >
+                                <div className="faq-question">
+                                    <span>{faq.question}</span>
+                                    {openFaq === index ? <Minus className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
+                                </div>
+                                {openFaq === index && (
+                                    <div className="faq-answer">
+                                        <p>{faq.answer}</p>
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>
@@ -767,6 +883,22 @@ const LandingPage = () => {
                 </div>
             </section>
 
+            {/* Sticky CTA Bar */}
+            {showStickyCTA && (
+                <div className="sticky-cta-bar">
+                    <div className="sticky-cta-content">
+                        <span className="sticky-cta-text">
+                            <strong>Ready to secure your applications?</strong>
+                            Start your free scan in 30 seconds.
+                        </span>
+                        <div className="sticky-cta-buttons">
+                            <Link to="/register" className="sticky-cta-primary">Start Free Scan →</Link>
+                            <Link to="/login" className="sticky-cta-secondary">Book Demo</Link>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Footer */}
             <footer className="footer-light">
                 <div className="footer-container-light">
@@ -776,9 +908,14 @@ const LandingPage = () => {
                                 <div className="logo-icon-light">
                                     <Shield className="w-5 h-5" />
                                 </div>
-                                <span>VulnScan Pro</span>
+                                <span>VulnScan<span className="gradient-text-light">Pro</span></span>
                             </Link>
                             <p>Advanced web and mobile application security scanning powered by AI.</p>
+                            <div className="security-badges-footer">
+                                {securityBadges.map((badge, index) => (
+                                    <span key={index} className="footer-badge">{badge.name}</span>
+                                ))}
+                            </div>
                             <div className="footer-social-light">
                                 <a href="#"><Twitter className="w-5 h-5" /></a>
                                 <a href="#"><Github className="w-5 h-5" /></a>
@@ -796,7 +933,7 @@ const LandingPage = () => {
                             </div>
                             <div className="footer-col-light">
                                 <h4>Resources</h4>
-                                <a href="#testimonials">Reviews</a>
+                                <a href="#testimonials">Case Studies</a>
                                 <Link to="/learning">Learning Center</Link>
                                 <Link to="/terminal">Terminal Labs</Link>
                                 <a href="#">Documentation</a>
@@ -813,7 +950,7 @@ const LandingPage = () => {
                                 <a href="#">Privacy Policy</a>
                                 <a href="#">Terms of Service</a>
                                 <a href="#">Security</a>
-                                <a href="#">Compliance</a>
+                                <a href="#">Disclosure Policy</a>
                             </div>
                         </div>
                     </div>

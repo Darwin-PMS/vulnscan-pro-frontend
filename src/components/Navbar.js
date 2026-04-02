@@ -4,7 +4,8 @@ import {
     Shield, LayoutDashboard, ScanLine, List, Database, Smartphone, 
     BookOpen, Terminal, LogOut, User, Bot, Crown, DollarSign, 
     Settings, ChevronDown, X, Menu, Zap, Activity, Target, Sun, Moon,
-    Layers
+    Layers, Globe, Code, Cloud, GitBranch, Lock, Bug, FileSearch,
+    ArrowRight, ExternalLink
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -23,25 +24,31 @@ const Navbar = () => {
         navigate('/');
     };
 
+    const isActive = (path) => location.pathname === path;
+
     const mainNavItems = [
         { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { path: '/scan', label: 'New Scan', icon: ScanLine, highlight: true },
     ];
 
-    const scanNavItems = [
-        { path: '/scans', label: 'All Scans', icon: List },
-        { path: '/scan-modules', label: 'Scan Modules', icon: Layers },
-        { path: '/dorks', label: 'GHDB Patterns', icon: Database },
+    const securityTestingNav = [
+        { path: '/scan-modules', label: 'Scan Modules', icon: Layers, desc: 'Configure scan types' },
+        { path: '/web-security', label: 'Web Security', icon: Globe, desc: 'OWASP Top 10 coverage' },
+        { path: '/api-security', label: 'API Security', icon: Code, desc: 'REST & GraphQL testing' },
+        { path: '/mobile', label: 'Mobile Security', icon: Smartphone, desc: 'Android & iOS testing' },
     ];
 
-    const toolsNavItems = [
-        { path: '/ai-assistant', label: 'AI Assistant', icon: Bot },
-        { path: '/terminal', label: 'Terminal Lab', icon: Terminal },
-        { path: '/mobile', label: 'Mobile Testing', icon: Smartphone },
-        { path: '/learning', label: 'Learning Center', icon: BookOpen },
+    const toolsNav = [
+        { path: '/ai-assistant', label: 'AI Assistant', icon: Bot, desc: 'Groq-powered help' },
+        { path: '/terminal', label: 'Terminal Lab', icon: Terminal, desc: 'Linux command practice' },
+        { path: '/dorks', label: 'GHDB Patterns', icon: Database, desc: 'Google hacking database' },
+        { path: '/learning', label: 'Learning Center', icon: BookOpen, desc: 'Security courses' },
     ];
 
-    const isActive = (path) => location.pathname === path;
+    const resourceNav = [
+        { path: '/scans', label: 'Scan History', icon: List, desc: 'View past scans' },
+        { path: '/tools', label: 'All Tools', icon: Zap, desc: 'Complete tool listing' },
+    ];
 
     return (
         <nav className={`navbar ${isDark ? 'navbar-dark' : 'navbar-light'}`}>
@@ -73,32 +80,48 @@ const Navbar = () => {
                         })}
                     </div>
 
-                    {/* Scans Dropdown */}
+                    {/* Security Testing Dropdown */}
                     <div 
                         className="nav-dropdown"
-                        onMouseEnter={() => setActiveDropdown('scans')}
+                        onMouseEnter={() => setActiveDropdown('security')}
                         onMouseLeave={() => setActiveDropdown(null)}
                     >
-                        <button className={`nav-item nav-dropdown-trigger ${activeDropdown === 'scans' ? 'active' : ''}`}>
-                            <Target size={18} />
-                            <span>Scans</span>
-                            <ChevronDown size={14} className={`chevron ${activeDropdown === 'scans' ? 'open' : ''}`} />
+                        <button className={`nav-item nav-dropdown-trigger ${activeDropdown === 'security' ? 'active' : ''}`}>
+                            <Shield size={18} />
+                            <span>Security Testing</span>
+                            <ChevronDown size={14} className={`chevron ${activeDropdown === 'security' ? 'open' : ''}`} />
                         </button>
-                        <div className={`nav-dropdown-menu ${activeDropdown === 'scans' ? 'show' : ''}`}>
-                            {scanNavItems.map((item) => {
-                                const Icon = item.icon;
-                                return (
-                                    <Link
-                                        key={item.path}
-                                        to={item.path}
-                                        className={`nav-dropdown-item ${isActive(item.path) ? 'active' : ''}`}
-                                        onClick={() => setActiveDropdown(null)}
-                                    >
-                                        <Icon size={16} />
-                                        <span>{item.label}</span>
+                        <div className={`nav-dropdown-menu dropdown-mega ${activeDropdown === 'security' ? 'show' : ''}`}>
+                            <div className="dropdown-mega-content">
+                                <div className="dropdown-section">
+                                    <h4 className="dropdown-section-title">Scan Types</h4>
+                                    {securityTestingNav.map((item) => {
+                                        const Icon = item.icon;
+                                        return (
+                                            <Link
+                                                key={item.path}
+                                                to={item.path}
+                                                className={`nav-dropdown-item ${isActive(item.path) ? 'active' : ''}`}
+                                                onClick={() => setActiveDropdown(null)}
+                                            >
+                                                <Icon size={18} className="dropdown-item-icon" />
+                                                <div className="dropdown-item-content">
+                                                    <span className="dropdown-item-label">{item.label}</span>
+                                                    <span className="dropdown-item-desc">{item.desc}</span>
+                                                </div>
+                                            </Link>
+                                        );
+                                    })}
+                                </div>
+                                <div className="dropdown-banner">
+                                    <Bug size={32} className="dropdown-banner-icon" />
+                                    <h3>Comprehensive Security</h3>
+                                    <p>Cover all OWASP vulnerabilities with our advanced scanning engine</p>
+                                    <Link to="/scan" className="dropdown-banner-btn">
+                                        Start Free Scan <ArrowRight size={16} />
                                     </Link>
-                                );
-                            })}
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -113,21 +136,49 @@ const Navbar = () => {
                             <span>Tools</span>
                             <ChevronDown size={14} className={`chevron ${activeDropdown === 'tools' ? 'open' : ''}`} />
                         </button>
-                        <div className={`nav-dropdown-menu ${activeDropdown === 'tools' ? 'show' : ''}`}>
-                            {toolsNavItems.map((item) => {
-                                const Icon = item.icon;
-                                return (
-                                    <Link
-                                        key={item.path}
-                                        to={item.path}
-                                        className={`nav-dropdown-item ${isActive(item.path) ? 'active' : ''}`}
-                                        onClick={() => setActiveDropdown(null)}
-                                    >
-                                        <Icon size={16} />
-                                        <span>{item.label}</span>
-                                    </Link>
-                                );
-                            })}
+                        <div className={`nav-dropdown-menu dropdown-mega ${activeDropdown === 'tools' ? 'show' : ''}`}>
+                            <div className="dropdown-mega-content">
+                                <div className="dropdown-section">
+                                    <h4 className="dropdown-section-title">Security Tools</h4>
+                                    {toolsNav.map((item) => {
+                                        const Icon = item.icon;
+                                        return (
+                                            <Link
+                                                key={item.path}
+                                                to={item.path}
+                                                className={`nav-dropdown-item ${isActive(item.path) ? 'active' : ''}`}
+                                                onClick={() => setActiveDropdown(null)}
+                                            >
+                                                <Icon size={18} className="dropdown-item-icon" />
+                                                <div className="dropdown-item-content">
+                                                    <span className="dropdown-item-label">{item.label}</span>
+                                                    <span className="dropdown-item-desc">{item.desc}</span>
+                                                </div>
+                                            </Link>
+                                        );
+                                    })}
+                                </div>
+                                <div className="dropdown-section">
+                                    <h4 className="dropdown-section-title">Resources</h4>
+                                    {resourceNav.map((item) => {
+                                        const Icon = item.icon;
+                                        return (
+                                            <Link
+                                                key={item.path}
+                                                to={item.path}
+                                                className={`nav-dropdown-item ${isActive(item.path) ? 'active' : ''}`}
+                                                onClick={() => setActiveDropdown(null)}
+                                            >
+                                                <Icon size={18} className="dropdown-item-icon" />
+                                                <div className="dropdown-item-content">
+                                                    <span className="dropdown-item-label">{item.label}</span>
+                                                    <span className="dropdown-item-desc">{item.desc}</span>
+                                                </div>
+                                            </Link>
+                                        );
+                                    })}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -144,7 +195,7 @@ const Navbar = () => {
                     </button>
 
                     {/* Pricing */}
-                    <Link to="/pricing" className="nav-pricing">
+                    <Link to="/pricing" className={`nav-pricing ${isActive('/pricing') ? 'active' : ''}`}>
                         <DollarSign size={16} />
                         <span>Pricing</span>
                     </Link>
@@ -152,9 +203,9 @@ const Navbar = () => {
                     {/* Subscription Badge */}
                     {isAuthenticated && <SubscriptionBadge />}
 
-                    {/* Admin Link */}
-                    {isAuthenticated && user?.role === 'admin' && (
-                        <Link to="/admin" className="nav-admin">
+                    {/* Admin/Enterprise Link */}
+                    {isAuthenticated && (user?.role === 'admin' || user?.role === 'enterprise') && (
+                        <Link to={user?.role === 'admin' ? '/admin' : '/enterprise'} className="nav-admin">
                             <Settings size={16} />
                         </Link>
                     )}
@@ -227,8 +278,8 @@ const Navbar = () => {
                     <div className="nav-mobile-divider" />
 
                     <div className="nav-mobile-group">
-                        <span className="nav-mobile-group-title">Scans</span>
-                        {scanNavItems.map((item) => {
+                        <span className="nav-mobile-group-title">Security Testing</span>
+                        {securityTestingNav.map((item) => {
                             const Icon = item.icon;
                             return (
                                 <Link
@@ -246,7 +297,25 @@ const Navbar = () => {
 
                     <div className="nav-mobile-group">
                         <span className="nav-mobile-group-title">Tools</span>
-                        {toolsNavItems.map((item) => {
+                        {toolsNav.map((item) => {
+                            const Icon = item.icon;
+                            return (
+                                <Link
+                                    key={item.path}
+                                    to={item.path}
+                                    className={`nav-mobile-item ${isActive(item.path) ? 'active' : ''}`}
+                                    onClick={() => setMobileMenuOpen(false)}
+                                >
+                                    <Icon size={20} />
+                                    <span>{item.label}</span>
+                                </Link>
+                            );
+                        })}
+                    </div>
+
+                    <div className="nav-mobile-group">
+                        <span className="nav-mobile-group-title">Resources</span>
+                        {resourceNav.map((item) => {
                             const Icon = item.icon;
                             return (
                                 <Link
@@ -266,7 +335,7 @@ const Navbar = () => {
 
                     <Link 
                         to="/pricing" 
-                        className="nav-mobile-item"
+                        className={`nav-mobile-item ${isActive('/pricing') ? 'active' : ''}`}
                         onClick={() => setMobileMenuOpen(false)}
                     >
                         <DollarSign size={20} />

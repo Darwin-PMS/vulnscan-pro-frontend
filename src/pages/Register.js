@@ -64,6 +64,7 @@ const Register = () => {
             });
 
             if (result.success) {
+                // Redirect based on user role (new users default to user dashboard)
                 navigate('/dashboard');
             } else {
                 setError(result.error || 'Registration failed');

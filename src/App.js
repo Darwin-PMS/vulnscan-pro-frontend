@@ -4,7 +4,8 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import ToastProvider from './contexts/ToastContext';
 import ProtectedRoute from './components/ProtectedRoute';
-import Navbar from './components/Navbar';
+import PublicNavbar from './components/PublicNavbar';
+import AppNavbar from './components/AppNavbar';
 import Dashboard from './pages/Dashboard';
 import NewScan from './pages/NewScan';
 import ScanList from './pages/ScanList';
@@ -22,6 +23,10 @@ import UserProfile from './pages/UserProfile';
 import AdminDashboard from './pages/AdminDashboard';
 import EnterpriseDashboard from './pages/EnterpriseDashboard';
 import ScanModules from './pages/ScanModules';
+import WebSecurityPage from './pages/WebSecurityPage';
+import MobileSecurityPage from './pages/MobileSecurityPage';
+import ApiSecurityPage from './pages/ApiSecurityPage';
+import ToolsPage from './pages/ToolsPage';
 
 function App() {
     return (
@@ -31,64 +36,65 @@ function App() {
                     <Router>
                         <div className="app">
                             <Routes>
+                                {/* Public Landing Pages - Uses PublicNavbar */}
                                 <Route path="/" element={<LandingPage />} />
+                                <Route path="/web-security" element={<><PublicNavbar /><main className="public-page"><WebSecurityPage /></main></>} />
+                                <Route path="/mobile-security" element={<><PublicNavbar /><main className="public-page"><MobileSecurityPage /></main></>} />
+                                <Route path="/api-security" element={<><PublicNavbar /><main className="public-page"><ApiSecurityPage /></main></>} />
+                                <Route path="/tools" element={<><PublicNavbar /><main className="public-page"><ToolsPage /></main></>} />
+                                <Route path="/pricing" element={<><PublicNavbar /><main className="public-page"><Pricing /></main></>} />
                                 <Route path="/login" element={<Login />} />
                                 <Route path="/register" element={<Register />} />
                                 
-                                {/* Protected Routes - Require Authentication */}
+                                {/* Protected Routes - Use AppNavbar */}
                                 <Route path="/dashboard" element={
                                     <ProtectedRoute>
-                                        <Navbar /><main style={{ paddingBottom: '40px' }}><Dashboard /></main>
+                                        <AppNavbar /><main className="app-page"><Dashboard /></main>
                                     </ProtectedRoute>
                                 } />
                                 <Route path="/scan" element={
                                     <ProtectedRoute>
-                                        <Navbar /><main style={{ paddingBottom: '40px' }}><NewScan /></main>
+                                        <AppNavbar /><main className="app-page"><NewScan /></main>
                                     </ProtectedRoute>
                                 } />
                                 <Route path="/ai-assistant" element={
                                     <ProtectedRoute>
-                                        <Navbar /><main style={{ paddingBottom: '40px' }}><AIAssistant /></main>
+                                        <AppNavbar /><main className="app-page"><AIAssistant /></main>
                                     </ProtectedRoute>
                                 } />
                                 <Route path="/scans" element={
                                     <ProtectedRoute>
-                                        <Navbar /><main style={{ paddingBottom: '40px' }}><ScanList /></main>
+                                        <AppNavbar /><main className="app-page"><ScanList /></main>
                                     </ProtectedRoute>
                                 } />
                                 <Route path="/scan/:scanId" element={
                                     <ProtectedRoute>
-                                        <Navbar /><main style={{ paddingBottom: '40px' }}><ScanResults /></main>
+                                        <AppNavbar /><main className="app-page"><ScanResults /></main>
                                     </ProtectedRoute>
                                 } />
                                 <Route path="/mobile" element={
                                     <ProtectedRoute>
-                                        <Navbar /><main style={{ paddingBottom: '40px' }}><MobileAppTesting /></main>
+                                        <AppNavbar /><main className="app-page"><MobileAppTesting /></main>
                                     </ProtectedRoute>
                                 } />
                                 <Route path="/terminal" element={
                                     <ProtectedRoute>
-                                        <Navbar /><main style={{ paddingBottom: '40px' }}><LinuxCommandLab /></main>
+                                        <AppNavbar /><main className="app-page"><LinuxCommandLab /></main>
                                     </ProtectedRoute>
                                 } />
                                 <Route path="/learning/*" element={
                                     <ProtectedRoute>
-                                        <Navbar /><main style={{ paddingBottom: '40px' }}><Learning /></main>
+                                        <AppNavbar /><main className="app-page"><Learning /></main>
                                     </ProtectedRoute>
                                 } />
                                 <Route path="/dorks" element={
                                     <ProtectedRoute>
-                                        <Navbar /><main style={{ paddingBottom: '40px' }}><DorkPatterns /></main>
-                                    </ProtectedRoute>
-                                } />
-                                <Route path="/pricing" element={
-                                    <ProtectedRoute>
-                                        <Navbar /><main style={{ paddingBottom: '40px' }}><Pricing /></main>
+                                        <AppNavbar /><main className="app-page"><DorkPatterns /></main>
                                     </ProtectedRoute>
                                 } />
                                 <Route path="/profile" element={
                                     <ProtectedRoute>
-                                        <Navbar /><main style={{ paddingBottom: '40px' }}><UserProfile /></main>
+                                        <AppNavbar /><main className="app-page"><UserProfile /></main>
                                     </ProtectedRoute>
                                 } />
                                 <Route path="/admin" element={
@@ -103,7 +109,7 @@ function App() {
                                 } />
                                 <Route path="/scan-modules" element={
                                     <ProtectedRoute>
-                                        <Navbar /><main style={{ paddingBottom: '40px' }}><ScanModules /></main>
+                                        <AppNavbar /><main className="app-page"><ScanModules /></main>
                                     </ProtectedRoute>
                                 } />
                             </Routes>
