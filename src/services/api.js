@@ -63,7 +63,54 @@ export const authApi = {
     login: (credentials) => api.post('/auth/login', credentials),
     logout: () => api.post('/auth/logout'),
     getCurrentUser: () => api.get('/auth/me'),
-    updateProfile: (data) => api.put('/auth/profile', data)
+    updateProfile: (data) => api.put('/auth/profile', data),
+    
+    // Password Reset
+    forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
+    resetPassword: (token, userId, newPassword) => api.post('/auth/reset-password', { token, userId, newPassword }),
+    verifyResetToken: (token, userId) => api.get('/auth/verify-reset-token', { params: { token, userId } }),
+    
+    // MFA
+    setupMFA: (method, data) => api.post('/mfa/setup', { method, ...data }),
+    verifyMFA: (code) => api.post('/mfa/verify', { code }),
+    verifyEmailOTP: (code) => api.post('/mfa/verify-email', { code }),
+    getMFAStatus: () => api.get('/mfa/status'),
+    disableMFA: (code) => api.post('/mfa/disable', { code }),
+    verifyBackupCode: (code) => api.post('/mfa/verify-backup', { code })
+};
+
+// API Keys
+export const apiKeyApi = {
+    getAll: () => api.get('/api-keys'),
+    create: (data) => api.post('/api-keys', data),
+    getById: (id) => api.get(`/api-keys/${id}`),
+    revoke: (id) => api.delete(`/api-keys/${id}`),
+    rotate: (id) => api.post(`/api-keys/${id}/rotate`)
+};
+
+// Webhooks
+export const webhookApi = {
+    getAll: () => api.get('/webhooks'),
+    create: (data) => api.post('/webhooks', data),
+    getById: (id) => api.get(`/webhooks/${id}`),
+    update: (id, data) => api.put(`/webhooks/${id}`, data),
+    delete: (id) => api.delete(`/webhooks/${id}`),
+    test: (id) => api.post(`/webhooks/${id}/test`),
+    getDeliveries: (id, params) => api.get(`/webhooks/${id}/deliveries`, { params }),
+    getEvents: () => api.get('/webhooks/events')
+};
+
+// Notifications
+export const notificationApi = {
+    getAll: (params) => api.get('/notifications', { params }),
+    getById: (id) => api.get(`/notifications/${id}`),
+    markRead: (id) => api.put(`/notifications/${id}/read`),
+    markAllRead: () => api.put('/notifications/read-all'),
+    delete: (id) => api.delete(`/notifications/${id}`),
+    clearAll: () => api.delete('/notifications/clear-all'),
+    getSettings: () => api.get('/notifications/settings'),
+    updateSettings: (settings) => api.put('/notifications/settings', settings),
+    getUnreadCount: () => api.get('/notifications/unread-count')
 };
 
 // Scan API
@@ -75,8 +122,27 @@ export const scanApi = {
     getScanHistory: (scanId) => api.get(`/scans/${scanId}/history`),
     getVulnerabilityById: (vulnId) => api.get(`/scans/vulnerability/${vulnId}`),
     deleteScan: (scanId) => api.delete(`/scans/${scanId}`),
+    cancelScan: (scanId) => api.post(`/scans/${scanId}/cancel`),
+    getRunningScans: () => api.get('/scans/running'),
     getDashboardStats: () => api.get('/scans/stats/dashboard'),
-    getUserStats: () => api.get('/scans/user/stats')
+    getUserStats: () => api.get('/scans/user/stats'),
+    // Scheduled scans
+    getSchedules: () => api.get('/scans/schedules'),
+    createSchedule: (data) => api.post('/scans/schedules', data),
+    updateSchedule: (id, data) => api.put(`/scans/schedules/${id}`, data),
+    deleteSchedule: (id) => api.delete(`/scans/schedules/${id}`),
+    // Scan templates
+    getTemplates: () => api.get('/scans/templates'),
+    createTemplate: (data) => api.post('/scans/templates', data),
+    updateTemplate: (id, data) => api.put(`/scans/templates/${id}`, data),
+    deleteTemplate: (id) => api.delete(`/scans/templates/${id}`),
+    applyTemplate: (id, targetUrl) => api.post(`/scans/templates/${id}/apply`, { targetUrl }),
+    // Scan control
+    retryScan: (scanId) => api.post(`/scans/${scanId}/retry`),
+    pauseScan: (scanId) => api.post(`/scans/${scanId}/pause`),
+    resumeScan: (scanId) => api.post(`/scans/${scanId}/resume`),
+    // Bulk scanning
+    bulkScan: (targets, options) => api.post('/scans/bulk', { targets, ...options })
 };
 
 // Dork API

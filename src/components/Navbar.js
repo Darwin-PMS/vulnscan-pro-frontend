@@ -5,7 +5,7 @@ import {
     BookOpen, Terminal, LogOut, User, Bot, Crown, DollarSign, 
     Settings, ChevronDown, X, Menu, Zap, Activity, Target, Sun, Moon,
     Layers, Globe, Code, Cloud, GitBranch, Lock, Bug, FileSearch,
-    ArrowRight, ExternalLink
+    ArrowRight, ExternalLink, BarChart3, ShieldCheck
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -47,6 +47,8 @@ const Navbar = () => {
 
     const resourceNav = [
         { path: '/scans', label: 'Scan History', icon: List, desc: 'View past scans' },
+        { path: '/plan-comparison', label: 'Compare Plans', icon: BarChart3, desc: 'View all plans' },
+        { path: '/compliance-reports', label: 'Compliance', icon: ShieldCheck, desc: 'Compliance reports' },
         { path: '/tools', label: 'All Tools', icon: Zap, desc: 'Complete tool listing' },
     ];
 

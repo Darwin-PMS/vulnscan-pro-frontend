@@ -1,0 +1,247 @@
+.upgrade-prompt-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.2s ease;
+}
+
+.upgrade-prompt-modal {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 440px;
+    width: 90%;
+    position: relative;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.upgrade-prompt-modal .close-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.upgrade-prompt-modal .close-btn:hover {
+    background: var(--dark-bg);
+    color: var(--text-primary);
+}
+
+.prompt-header {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.prompt-header .icon-container {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    color: white;
+}
+
+.prompt-header h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.prompt-header p {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.feature-info {
+    background: var(--dark-bg);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.feature-info .feature-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+.feature-info .feature-name {
+    font-weight: 600;
+    font-size: 15px;
+    text-transform: capitalize;
+    margin-bottom: 4px;
+}
+
+.feature-info .feature-description {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.recommended-plan {
+    margin-bottom: 24px;
+}
+
+.recommended-plan .plan-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+}
+
+.plan-card {
+    border: 2px solid;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.plan-card .plan-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.plan-card .plan-price {
+    padding: 16px;
+    text-align: center;
+    background: var(--card-bg);
+}
+
+.plan-card .plan-price .price {
+    font-size: 32px;
+    font-weight: 800;
+}
+
+.plan-card .plan-price .period {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.plan-card .plan-price .custom {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.plan-card .plan-features {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border-top: 1px solid var(--border-color);
+}
+
+.plan-card .plan-features li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.plan-card .plan-features li:last-child {
+    border-bottom: none;
+}
+
+.plan-card .plan-features li svg {
+    color: var(--secondary-color);
+    flex-shrink: 0;
+}
+
+.upgrade-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.upgrade-actions .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 14px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.upgrade-actions .btn-primary {
+    background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+    border: none;
+    color: white;
+}
+
+.upgrade-actions .btn-primary:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.upgrade-actions .btn-secondary {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.upgrade-actions .btn-secondary:hover {
+    background: var(--dark-bg);
+    color: var(--text-primary);
+}
+
+.plan-comparison-link {
+    text-align: center;
+    margin-top: 16px;
+}
+
+.plan-comparison-link a {
+    color: var(--primary-color);
+    font-size: 13px;
+    text-decoration: none;
+}
+
+.plan-comparison-link a:hover {
+    text-decoration: underline;
+}

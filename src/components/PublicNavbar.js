@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
     Shield, Sun, Moon, ChevronDown, X, Menu, 
-    CheckCircle, ArrowRight, Zap, Lock, Globe, ScanLine
+    CheckCircle, ArrowRight, Zap, Lock, Globe, ScanLine, Smartphone, Code
 } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -10,6 +10,7 @@ const PublicNavbar = () => {
     const location = useLocation();
     const { isDark, toggleTheme } = useTheme();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [activeDropdown, setActiveDropdown] = useState(null);
 
     const isActive = (path) => location.pathname === path;
 
@@ -17,6 +18,12 @@ const PublicNavbar = () => {
         { path: '/#features', label: 'Features' },
         { path: '/#how-it-works', label: 'How It Works' },
         { path: '/pricing', label: 'Pricing' },
+    ];
+
+    const securityNav = [
+        { path: '/web-security', label: 'Web Security', icon: Globe, desc: 'OWASP Top 10 coverage' },
+        { path: '/mobile-security', label: 'Mobile Security', icon: Smartphone, desc: 'Android & iOS testing' },
+        { path: '/api-security', label: 'API Security', icon: Code, desc: 'REST & GraphQL testing' },
     ];
 
     return (
@@ -41,6 +48,36 @@ const PublicNavbar = () => {
                             {link.label}
                         </Link>
                     ))}
+                    <div 
+                        className="public-nav-dropdown"
+                        onMouseEnter={() => setActiveDropdown('security')}
+                        onMouseLeave={() => setActiveDropdown(null)}
+                    >
+                        <button className={`public-nav-link public-nav-dropdown-trigger ${activeDropdown === 'security' ? 'active' : ''}`}>
+                            Security <ChevronDown size={14} />
+                        </button>
+                        {activeDropdown === 'security' && (
+                            <div className="public-nav-dropdown-menu">
+                                {securityNav.map((item) => {
+                                    const Icon = item.icon;
+                                    return (
+                                        <Link
+                                            key={item.path}
+                                            to={item.path}
+                                            className="public-nav-dropdown-item"
+                                            onClick={() => setActiveDropdown(null)}
+                                        >
+                                            <Icon size={16} />
+                                            <div>
+                                                <span className="dropdown-item-label">{item.label}</span>
+                                                <span className="dropdown-item-desc">{item.desc}</span>
+                                            </div>
+                                        </Link>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Right Section */}
@@ -88,6 +125,24 @@ const PublicNavbar = () => {
                             {link.label}
                         </Link>
                     ))}
+                    
+                    <div className="public-nav-mobile-divider" />
+                    
+                    <span className="public-nav-mobile-link">Security</span>
+                    {securityNav.map((item) => {
+                        const Icon = item.icon;
+                        return (
+                            <Link
+                                key={item.path}
+                                to={item.path}
+                                className="public-nav-mobile-link"
+                                onClick={() => setMobileMenuOpen(false)}
+                            >
+                                <Icon size={16} />
+                                <span>{item.label}</span>
+                            </Link>
+                        );
+                    })}
                     
                     <div className="public-nav-mobile-divider" />
                     
