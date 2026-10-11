@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
     ArrowRight,
@@ -73,6 +73,36 @@ const Landing = () => {
     const [contact, setContact] = useState({ name: '', email: '', message: '' });
     const [contactStatus, setContactStatus] = useState({ type: '', message: '' });
     const [isSending, setIsSending] = useState(false);
+    const landingRef = useRef(null);
+
+    useEffect(() => {
+        document.title = 'VulnScan Pro | Web & Mobile Security Testing';
+
+        const landingPage = landingRef.current;
+        if (!landingPage) return undefined;
+
+        const revealItems = landingPage.querySelectorAll('[data-reveal]');
+        if (!('IntersectionObserver' in window)) {
+            revealItems.forEach((item) => item.classList.add('is-visible'));
+            return undefined;
+        }
+
+        landingPage.classList.add('landing-reveal-enabled');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.12, rootMargin: '0px 0px -32px 0px' });
+
+        revealItems.forEach((item) => observer.observe(item));
+        return () => {
+            observer.disconnect();
+            landingPage.classList.remove('landing-reveal-enabled');
+        };
+    }, []);
 
     const updateContact = (event) => {
         const { name, value } = event.target;
@@ -100,7 +130,7 @@ const Landing = () => {
     };
 
     return (
-        <div className="landing-page">
+        <div className="landing-page" ref={landingRef}>
             <section id="intro" className="landing-hero">
                 <div className="container landing-hero-layout">
                     <div className="landing-hero-copy">
@@ -181,14 +211,19 @@ const Landing = () => {
 
             <section id="features" className="landing-section">
                 <div className="container">
-                    <div className="landing-section-heading">
+                    <div className="landing-section-heading" data-reveal>
                         <span className="landing-section-kicker">Platform features</span>
                         <h2>Everything you need to work through security findings</h2>
                         <p>Explore the tools available in the VulnScan Pro workspace.</p>
                     </div>
                     <div className="landing-feature-grid">
-                        {features.map(({ icon: Icon, title, description }) => (
-                            <article className="card landing-feature-card" key={title}>
+                        {features.map(({ icon: Icon, title, description }, index) => (
+                            <article
+                                className="card landing-feature-card"
+                                data-reveal
+                                style={{ '--reveal-delay': `${(index % 3) * 90}ms` }}
+                                key={title}
+                            >
                                 <div className="landing-icon-wrap"><Icon size={22} /></div>
                                 <h3>{title}</h3>
                                 <p>{description}</p>
@@ -198,8 +233,57 @@ const Landing = () => {
                 </div>
             </section>
 
+            <section id="how-it-works" className="landing-section landing-workflow">
+                <div className="container">
+                    <div className="landing-section-heading" data-reveal>
+                        <span className="landing-section-kicker">How it works</span>
+                        <h2>A clear path from target to next steps</h2>
+                        <p>Keep your assessment focused, understand what the scanner reports, and decide what to review next.</p>
+                    </div>
+                    <div className="landing-workflow-grid">
+                        {[
+                            {
+                                number: '01',
+                                icon: Globe2,
+                                title: 'Choose an authorized target',
+                                description: 'Enter the website you own or have explicit permission to assess.'
+                            },
+                            {
+                                number: '02',
+                                icon: ScanLine,
+                                title: 'Run your assessment',
+                                description: 'Start a scan and follow its progress from your workspace.'
+                            },
+                            {
+                                number: '03',
+                                icon: ShieldCheck,
+                                title: 'Review and take action',
+                                description: 'Explore findings, inspect evidence, and use remediation guidance to plan what comes next.'
+                            }
+                        ].map(({ number, icon: Icon, title, description }, index) => (
+                            <article
+                                className="landing-workflow-step"
+                                data-reveal
+                                style={{ '--reveal-delay': `${index * 110}ms` }}
+                                key={number}
+                            >
+                                <div className="landing-step-topline">
+                                    <span className="landing-step-number">{number}</span>
+                                    <span className="landing-step-icon"><Icon size={20} /></span>
+                                </div>
+                                <h3>{title}</h3>
+                                <p>{description}</p>
+                            </article>
+                        ))}
+                    </div>
+                    <p className="landing-workflow-note" data-reveal>
+                        VulnScan Pro supports your review; validate results and confirm fixes in your own environment.
+                    </p>
+                </div>
+            </section>
+
             <section id="about" className="landing-section landing-about">
-                <div className="container landing-about-layout">
+                <div className="container landing-about-layout" data-reveal>
                     <div>
                         <span className="landing-section-kicker">About VulnScan Pro</span>
                         <h2>Make security work easier to understand and act on.</h2>
@@ -222,7 +306,7 @@ const Landing = () => {
 
             <section id="blog" className="landing-section">
                 <div className="container">
-                    <div className="landing-section-heading landing-blog-heading">
+                    <div className="landing-section-heading landing-blog-heading" data-reveal>
                         <div>
                             <span className="landing-section-kicker">From the blog</span>
                             <h2>Notes for a safer web</h2>
@@ -230,8 +314,13 @@ const Landing = () => {
                         <span className="landing-coming-soon">Articles coming soon</span>
                     </div>
                     <div className="landing-blog-grid">
-                        {articles.map((article) => (
-                            <article className="card landing-blog-card" key={article.title}>
+                        {articles.map((article, index) => (
+                            <article
+                                className="card landing-blog-card"
+                                data-reveal
+                                style={{ '--reveal-delay': `${index * 90}ms` }}
+                                key={article.title}
+                            >
                                 <span>{article.category}</span>
                                 <h3>{article.title}</h3>
                                 <p>{article.description}</p>
@@ -242,9 +331,37 @@ const Landing = () => {
                 </div>
             </section>
 
+            <section id="faq" className="landing-section landing-faq">
+                <div className="container landing-faq-layout">
+                    <div data-reveal>
+                        <span className="landing-section-kicker">Good to know</span>
+                        <h2>Questions before you get started?</h2>
+                        <p>Here are a few things to know before using the security workspace.</p>
+                    </div>
+                    <div className="landing-faq-list" data-reveal>
+                        <details>
+                            <summary>Can I scan any website?</summary>
+                            <p>No. Only scan websites and systems you own or have explicit permission to assess.</p>
+                        </details>
+                        <details>
+                            <summary>Does an automated scan replace a security review?</summary>
+                            <p>No. Automated results are a starting point. Validate findings in context and use expert review where appropriate.</p>
+                        </details>
+                        <details>
+                            <summary>What can I do after signing in?</summary>
+                            <p>Access the available scan tools, review findings, explore learning labs, and use the other workspace features.</p>
+                        </details>
+                        <details>
+                            <summary>Are all findings confirmed vulnerabilities?</summary>
+                            <p>Not necessarily. Review the evidence and validate each result before treating it as a confirmed issue.</p>
+                        </details>
+                    </div>
+                </div>
+            </section>
+
             <section id="contact" className="landing-section landing-contact">
                 <div className="container landing-contact-layout">
-                    <div className="landing-contact-copy">
+                    <div className="landing-contact-copy" data-reveal>
                         <span className="landing-section-kicker">Contact us</span>
                         <h2>Have a question or feedback?</h2>
                         <p>Send the team a message and we’ll get back to you.</p>
@@ -254,7 +371,7 @@ const Landing = () => {
                         </div>
                     </div>
 
-                    <form className="card landing-contact-form" onSubmit={submitContact}>
+                    <form className="card landing-contact-form" onSubmit={submitContact} data-reveal>
                         <label htmlFor="contact-name">Name</label>
                         <input
                             id="contact-name"
@@ -304,7 +421,7 @@ const Landing = () => {
             </section>
 
             <section className="landing-final-cta">
-                <div className="container landing-final-cta-content">
+                <div className="container landing-final-cta-content" data-reveal>
                     <div>
                         <h2>Ready to explore your security workspace?</h2>
                         <p>Sign in to access scanning, findings, and learning tools.</p>
@@ -315,7 +432,7 @@ const Landing = () => {
                 </div>
             </section>
 
-            <footer className="landing-footer">
+            <footer className="landing-footer" data-reveal>
                 <div className="container landing-footer-content">
                     <Link to="/" className="nav-brand">
                         <ShieldCheck size={22} />

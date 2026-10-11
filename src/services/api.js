@@ -9,6 +9,8 @@ const api = axios.create({
     }
 });
 
+let dashboardStatsRequest;
+
 // Scan API
 export const scanApi = {
     startScan: (url) => api.post('/scans/start', { url }),
@@ -18,7 +20,15 @@ export const scanApi = {
     getScanHistory: (scanId) => api.get(`/scans/${scanId}/history`),
     getVulnerabilityById: (vulnId) => api.get(`/scans/vulnerability/${vulnId}`),
     deleteScan: (scanId) => api.delete(`/scans/${scanId}`),
-    getDashboardStats: () => api.get('/scans/stats/dashboard')
+    getDashboardStats: () => {
+        if (!dashboardStatsRequest) {
+            dashboardStatsRequest = api.get('/scans/stats/dashboard')
+                .finally(() => {
+                    dashboardStatsRequest = undefined;
+                });
+        }
+        return dashboardStatsRequest;
+    }
 };
 
 // Dork API
