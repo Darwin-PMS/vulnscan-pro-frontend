@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Lock, User, AlertCircle, Terminal, Shield } from 'lucide-react';
+import { Lock, User, AlertCircle, Shield } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const Login = () => {
@@ -53,10 +53,9 @@ const Login = () => {
                         <Shield size={40} color="white" />
                     </div>
                     <h1 style={{ fontSize: '28px', marginBottom: '8px' }}>Welcome Back</h1>
-                    <p style={{ color: 'var(--text-secondary)' }}>Sign in to access the terminal lab</p>
+                    <p style={{ color: 'var(--text-secondary)' }}>Sign in to access the VulnScan Pro workspace</p>
                 </div>
 
-                {/* Info Banner */}
                 <div style={{
                     background: 'rgba(99, 102, 241, 0.1)',
                     border: '1px solid var(--primary-color)',
@@ -67,13 +66,10 @@ const Login = () => {
                     alignItems: 'flex-start',
                     gap: '12px'
                 }}>
-                    <Terminal size={20} style={{ color: 'var(--primary-color)', flexShrink: 0, marginTop: '2px' }} />
+                    <Shield size={20} style={{ color: 'var(--primary-color)', flexShrink: 0, marginTop: '2px' }} />
                     <div style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
-                        <strong style={{ color: 'var(--text-primary)' }}>Limited Access Mode</strong>
-                        <p style={{ marginTop: '4px' }}>
-                            Without login, you can only try 2 commands in the terminal.
-                            Sign in for unlimited access to all labs and exercises.
-                        </p>
+                        <strong style={{ color: 'var(--text-primary)' }}>Your security workspace</strong>
+                        <p style={{ marginTop: '4px' }}>Sign in to continue to scans, findings, learning labs, and the other workspace tools.</p>
                     </div>
                 </div>
 

@@ -23,9 +23,16 @@ const Navbar = () => {
         { path: '/learning', label: 'Learning', icon: BookOpen },
         { path: '/dorks', label: 'GHDB Patterns', icon: Database }
     ];
+    const landingItems = [
+        { id: 'intro', label: 'Intro' },
+        { id: 'features', label: 'Features' },
+        { id: 'about', label: 'About' },
+        { id: 'blog', label: 'Blog' },
+        { id: 'contact', label: 'Contact' }
+    ];
 
     return (
-        <nav className="navbar">
+        <nav className={`navbar ${!isAuthenticated ? 'navbar-public' : ''}`}>
             <div className="container navbar-content">
                 <Link to="/" className="nav-brand">
                     <Shield size={28} />
@@ -33,23 +40,33 @@ const Navbar = () => {
                 </Link>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <div className="nav-links">
-                        {navItems.map((item) => {
-                            const Icon = item.icon;
-                            const isActive = location.pathname === item.path;
+                    {isAuthenticated ? (
+                        <div className="nav-links">
+                            {navItems.map((item) => {
+                                const Icon = item.icon;
+                                const isActive = location.pathname === item.path;
 
-                            return (
-                                <Link
-                                    key={item.path}
-                                    to={item.path}
-                                    className={`nav-link ${isActive ? 'active' : ''}`}
-                                >
-                                    <Icon size={18} />
-                                    <span>{item.label}</span>
-                                </Link>
-                            );
-                        })}
-                    </div>
+                                return (
+                                    <Link
+                                        key={item.path}
+                                        to={item.path}
+                                        className={`nav-link ${isActive ? 'active' : ''}`}
+                                    >
+                                        <Icon size={18} />
+                                        <span>{item.label}</span>
+                                    </Link>
+                                );
+                            })}
+                        </div>
+                    ) : location.pathname === '/' ? (
+                        <div className="nav-links public-nav-links">
+                            {landingItems.map((item) => (
+                                <a key={item.id} href={`#${item.id}`} className="nav-link">
+                                    {item.label}
+                                </a>
+                            ))}
+                        </div>
+                    ) : null}
 
                     {/* User Section */}
                     <div style={{
